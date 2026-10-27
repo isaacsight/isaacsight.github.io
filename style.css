@@ -28,3 +28,8 @@
 .project-close .campaign-caption{margin-top:40px;font-size:14px}.campaign-case .case-link{display:inline-block;margin-top:16px;font-size:14px;border-bottom:1px solid currentColor;padding-bottom:4px}.campaign-case .case-link:hover{color:#6741b8}
 @media(max-width:1000px){.copy-sheet{gap:45px}}
 @media(max-width:700px){.campaign-case-page .case-intro h1{font-size:17vw}.campaign-case-page .case-hero img{aspect-ratio:1.3;object-fit:cover}.copy-sheet{grid-template-columns:1fr;gap:20px;margin-top:36px}.copy-sheet h3{font-size:40px}.copy-sheet p{font-size:16px}.rollout-row{grid-template-columns:1fr;gap:12px}.status{justify-self:start}.rollout-row h3{font-size:19px}}
+
+/* Brand studies 04–07 */
+.brand-lowtide{font-family:Georgia,serif;font-style:italic;font-weight:400;letter-spacing:-.04em}.brand-plot{font-family:Display,Impact,sans-serif;font-weight:800;letter-spacing:.02em}.brand-sideb{font-family:Display,Impact,sans-serif;font-weight:800;letter-spacing:-.03em}.brand-temper{font-family:Georgia,serif;font-weight:700;letter-spacing:.04em}
+.case-lowtide .poster h3,.case-temper .poster h3{font-family:Georgia,serif;font-weight:700;font-size:clamp(44px,5.4vw,84px);line-height:.98;letter-spacing:-.03em}.case-lowtide .flat-brand{font-size:clamp(44px,5.5vw,76px)}.case-temper .flat-brand,.case-plot .flat-brand{font-size:clamp(38px,4.6vw,64px)}.case-sideb .campaign-square{background:#ff3f8e;color:#1b1b1b}.case-plot .campaign-square{background:#4f6b4a;color:#f3e9dc}.case-lowtide .campaign-square{background:#9fc5b8;color:#1c2a3a}.case-temper .campaign-square{background:#2b3e5c;color:#efe4cf}
+.project-grid.second{margin-top:34px}@media(max-width:700px){.project-grid.second{margin-top:42px}.case-lowtide .poster h3,.case-temper .poster h3{font-size:15vw}}
