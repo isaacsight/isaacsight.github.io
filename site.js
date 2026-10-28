@@ -14,14 +14,15 @@ document.querySelectorAll('details').forEach(section => {
   var modes=['particles','halftone','ascii','slices','wave'], modeNames={particles:'Particles',halftone:'Halftone',ascii:'ASCII',slices:'Slices',wave:'Wave'};
   var ink=0, mode=0, lum=null, src=null, mouse={x:-9999,y:-9999}, ripples=[], reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
   var CH=' .:-=+*#%@', P=[], prev=0;
-  var img=new Image(); img.src='/assets/about-halftone-src.jpg';
-  img.onload=function(){
+  var photos=['/assets/about-halftone-src.jpg'], photo=0, started=false;
+  function load(u){ var img=new Image(); img.src=u; img.onload=function(){
     var off=document.createElement('canvas'); off.width=N; off.height=N; var o=off.getContext('2d'); o.drawImage(img,0,0,N,N);
     var d=o.getImageData(0,0,N,N).data; lum=new Float32Array(N*N); for(var i=0;i<N*N;i++) lum[i]=d[i*4]/255;
     src=document.createElement('canvas'); src.width=W; src.height=H; src.getContext('2d').drawImage(img,0,0,W,H);
-    P=[]; for(var j=0;j<N;j++) for(var i=0;i<N;i++){ var dark=1-lum[j*N+i]; if(dark<0.08) continue; P.push({hx:(i+0.5)*cell,hy:(j+0.5)*cell,x:(i+0.5)*cell,y:(j+0.5)*cell,vx:0,vy:0,r:dark*cell*0.62,i:i,j:j}); }
-    requestAnimationFrame(draw);
-  };
+    var old=P; P=[]; for(var j=0;j<N;j++) for(var i=0;i<N;i++){ var dark=1-lum[j*N+i]; if(dark<0.08) continue; var s=old[P.length]; P.push({hx:(i+0.5)*cell,hy:(j+0.5)*cell,x:s?s.x:(i+0.5)*cell,y:s?s.y:(j+0.5)*cell,vx:0,vy:0,r:dark*cell*0.62,i:i,j:j}); }
+    if(!started){ started=true; requestAnimationFrame(draw); } }; }
+  load(photos[0]);
+  var b4=document.getElementById('press-photo'); if(b4) b4.addEventListener('click',function(){ photo=(photo+1)%photos.length; load(photos[photo]); });
   function pos(e){ var r=cv.getBoundingClientRect(); return {x:(e.clientX-r.left)/r.width*W, y:(e.clientY-r.top)/r.height*H}; }
   cv.addEventListener('pointermove',function(e){ var p=pos(e); mouse.x=p.x; mouse.y=p.y; });
   cv.addEventListener('pointerleave',function(){ mouse.x=-9999; mouse.y=-9999; });
