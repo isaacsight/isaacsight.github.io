@@ -1,0 +1,884 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Yoake · Tokyo</title>
+<meta name="description" content="A clay convenience store in Tokyo that runs on real Tokyo time, weather and season. Every package on the shelves is designed. Pick something up and take the receipt home.">
+<style>
+:root{--ink:#1E1F2B;--ink-2:#4A4C5E;--mute:#8A8C9A;--paper:#FBFAF6;--indigo:#2B2F5C;--persimmon:#E8693B;--matcha:#7FA05A;--ease:cubic-bezier(.2,.7,.2,1)}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;overflow:hidden;background:#1D2238;color:var(--paper);font-family:"Helvetica Neue",Helvetica,Arial,sans-serif;-webkit-font-smoothing:antialiased}
+body.day{color:var(--ink)}
+.jp{font-family:"Hiragino Sans","Hiragino Kaku Gothic ProN","Noto Sans JP","Yu Gothic",sans-serif}
+button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
+:focus-visible{outline:2px solid currentColor;outline-offset:4px}
+canvas#gl{position:fixed;inset:0;width:100%;height:100%;display:block;touch-action:none;cursor:grab}
+canvas#gl.drag{cursor:grabbing}canvas#gl.hot{cursor:pointer}
+
+header{position:fixed;left:clamp(16px,4vw,44px);right:clamp(16px,4vw,44px);top:clamp(16px,3.5vw,34px);display:flex;justify-content:space-between;align-items:flex-start;gap:12px;pointer-events:none}
+.store h1{font-size:clamp(26px,3.6vw,40px);font-weight:700;letter-spacing:.06em;line-height:1}
+.store h1 .jp{font-size:.5em;font-weight:400;letter-spacing:.1em;margin-left:8px;opacity:.8}
+#live{margin-top:10px;font-size:13px;letter-spacing:.04em;opacity:.9}
+#live b{font-weight:600}
+.store{min-width:0}.right{display:flex;gap:10px;align-items:center;pointer-events:auto;flex-shrink:0}
+.pill{font-size:12px;letter-spacing:.14em;text-transform:uppercase;padding:10px 14px;border-radius:999px;background:rgba(251,250,246,.14);backdrop-filter:blur(8px);border:1px solid rgba(251,250,246,.22)}
+body.day .pill{background:rgba(251,250,246,.75);border-color:rgba(30,31,43,.08)}
+.pill.buy,body.day .pill.buy{background:var(--persimmon);border-color:var(--persimmon);color:#fff}
+.pill b{font-weight:700;margin-left:4px}
+footer{color:var(--paper);text-shadow:0 1px 8px rgba(20,18,30,.55);position:fixed;left:clamp(16px,4vw,44px);right:clamp(16px,4vw,44px);bottom:clamp(16px,3.5vw,30px);display:flex;justify-content:space-between;align-items:flex-end;gap:16px;font-size:12px;letter-spacing:.1em;text-transform:uppercase;pointer-events:none;opacity:.9}
+#status{display:flex;flex-direction:column;gap:6px}#status .hint{opacity:.7}
+.cred{text-transform:none;letter-spacing:.02em;opacity:.7;text-align:right;max-width:420px}
+@media (max-width:900px){.cred{display:none}}
+
+#toast{position:fixed;left:50%;top:clamp(110px,16vh,150px);transform:translate(-50%,-10px);opacity:0;background:var(--paper);color:var(--ink);padding:10px 16px;border-radius:999px;font-size:13px;letter-spacing:.04em;transition:all .5s var(--ease);pointer-events:none;white-space:nowrap;z-index:30}
+#toast.show{opacity:1;transform:translate(-50%,0)}
+
+/* product card */
+.sheet{position:fixed;z-index:20;right:clamp(16px,3vw,40px);top:50%;width:min(360px,calc(100vw - 32px));transform:translate(24px,-50%);opacity:0;pointer-events:none;background:var(--paper);color:var(--ink);border-radius:12px;overflow:hidden;box-shadow:0 24px 60px rgba(10,12,30,.35);transition:transform .45s var(--ease),opacity .35s var(--ease)}
+.sheet.open{transform:translate(0,-50%);opacity:1;pointer-events:auto}
+#card figure{background:linear-gradient(#FFFFFF,#EEEBE3);height:230px}#c-cv{width:100%;height:100%;display:block}
+.sheet .b{padding:18px 22px 22px}
+#card h2{font-size:23px;font-weight:600;line-height:1.15}
+#card .sub{display:flex;gap:10px;align-items:baseline;margin-top:6px;flex-wrap:wrap}#card .sub .jp{font-size:17px;color:var(--ink-2)}#card .price{font-size:15px;color:var(--ink-2)}
+#card p{font-size:15px;line-height:1.5;margin-top:12px;color:var(--ink-2)}
+#card .tag{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+#card .tag span{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--mute);border:1px solid #DDD9CF;border-radius:999px;padding:4px 9px}
+#card .tag span.lim{color:#fff;background:var(--persimmon);border-color:var(--persimmon)}
+.act{display:flex;gap:10px;align-items:center;margin-top:16px}
+.btn{font-size:13px;letter-spacing:.12em;text-transform:uppercase;padding:13px 18px;border-radius:999px;background:var(--ink);color:var(--paper)}
+.btn.o{background:none;color:var(--ink);border:1px solid #CFCBC0}
+.btn:disabled{opacity:.35;cursor:default}
+.act .inb{font-size:13px;color:var(--mute)}
+.x{position:absolute;right:10px;top:10px;width:36px;height:36px;border-radius:50%;background:rgba(251,250,246,.95);color:var(--ink);font-size:20px;line-height:36px;text-align:center;z-index:2}
+
+/* basket */
+#basket h2{font-size:20px;font-weight:600}
+#b-list{list-style:none;margin-top:14px;display:grid;gap:8px;max-height:40vh;overflow:auto}
+#b-list li{display:grid;grid-template-columns:1fr auto auto;gap:10px;align-items:center;font-size:14px}
+#b-list .jp{color:var(--mute);font-size:12px;margin-left:6px}
+#b-list button{width:26px;height:26px;border-radius:50%;border:1px solid #DDD9CF;line-height:22px;color:var(--mute)}
+#b-total{display:flex;justify-content:space-between;border-top:1px solid #E6E2D8;margin-top:14px;padding-top:12px;font-size:15px}
+#b-empty{margin-top:12px;color:var(--mute);font-size:14px}
+
+/* receipt */
+#receipt{position:fixed;inset:0;z-index:35;background:rgba(14,16,30,.72);backdrop-filter:blur(8px);display:grid;place-items:center;opacity:0;pointer-events:none;transition:opacity .4s var(--ease)}
+#receipt.open{opacity:1;pointer-events:auto}
+#receipt .in{display:flex;flex-direction:column;align-items:center;gap:16px;max-height:calc(100vh - 40px)}
+#r-img{width:min(320px,80vw);max-height:calc(100vh - 140px);object-fit:contain;object-position:top;box-shadow:0 20px 50px rgba(0,0,0,.4);transform:translateY(-30px);opacity:0;transition:transform 1.2s var(--ease),opacity .6s}
+#receipt.open #r-img{transform:none;opacity:1}
+#receipt .row{display:flex;gap:10px}#receipt .btn{background:var(--paper);color:var(--ink)}#receipt .btn.o{background:none;color:var(--paper);border-color:rgba(251,250,246,.4)}
+a.btn{text-decoration:none;display:inline-block}
+
+/* intro */
+#home{position:fixed;inset:0;z-index:40;background:#1D2238;color:var(--paper);display:grid;place-items:center;cursor:pointer;transition:opacity 1s var(--ease);text-align:center}
+#home.gone{opacity:0;pointer-events:none}
+#home .mk{width:64px;height:64px;margin:0 auto 26px}
+#home .w{font-size:clamp(48px,9vw,96px);font-weight:700;letter-spacing:.08em;line-height:1}
+#home .j{font-size:clamp(16px,2.2vw,24px);margin-top:12px;opacity:.85}
+#home .t{margin-top:30px;font-size:15px;opacity:.85}
+#home .go{margin-top:30px;display:inline-block;font-size:13px;letter-spacing:.16em;text-transform:uppercase;padding:14px 22px;border-radius:999px;border:1px solid rgba(251,250,246,.5)}
+#home .note{position:absolute;bottom:clamp(16px,4vw,34px);left:0;right:0;font-size:12px;letter-spacing:.12em;text-transform:uppercase;opacity:.6}
+
+@media (max-width:600px){
+  .store h1{font-size:24px}#live{font-size:12px;margin-top:8px}
+  .pill{padding:8px 11px;font-size:11px;letter-spacing:.1em}.right{gap:6px}.long{display:none}
+  .sheet{top:auto;bottom:0;left:0;right:0;width:auto;border-radius:16px 16px 0 0;transform:translateY(100%)}.sheet.open{transform:translateY(0)}
+  #card figure{height:160px}#card p{font-size:14px;margin-top:8px}
+}
+body.embed .cred{display:none}
+@media (prefers-reduced-motion:reduce){*,*::after{animation:none!important;transition:none!important}}
+</style>
+<script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"}}</script>
+</head>
+<body>
+<canvas id="gl" aria-label="A clay convenience store in Tokyo. Drag to look around, tap things on the shelves."></canvas>
+
+<header>
+  <div class="store"><h1>YOAKE<span class="jp">夜明け</span></h1><div id="live">Kōenji, Tokyo</div></div>
+  <div class="right">
+    <button class="pill" id="sound" aria-pressed="true">Sound on</button>
+    <button class="pill buy" id="basketBtn" aria-haspopup="dialog">Basket<b id="bcount">0</b></button>
+  </div>
+</header>
+<footer>
+  <span id="status"><span id="truck"></span><span class="hint"><span class="long">Drag to look around · </span>Tap anything on the shelves</span></span>
+  <span class="cred">A fictional store. The packaging is designed by Isaac Hernandez. The time, weather and season are live from Tokyo.</span>
+</footer>
+<div id="toast" role="status" aria-live="polite"></div>
+
+<aside id="card" class="sheet" role="dialog" aria-labelledby="c-name">
+  <button class="x" id="cardX" aria-label="Close">×</button>
+  <figure><canvas id="c-cv" aria-hidden="true"></canvas></figure>
+  <div class="b"><h2 id="c-name"></h2><div class="sub"><span class="jp" id="c-jp"></span><span class="price" id="c-price"></span></div><p id="c-text"></p><div class="tag" id="c-tag"></div>
+    <div class="act"><button class="btn" id="add">Add to basket</button><span class="inb" id="c-inb"></span></div></div>
+</aside>
+
+<aside id="basket" class="sheet" role="dialog" aria-labelledby="b-h">
+  <button class="x" id="basketX" aria-label="Close">×</button>
+  <div class="b"><h2 id="b-h">Your basket</h2><ul id="b-list"></ul><p id="b-empty">Nothing yet. Tap something on the shelves.</p>
+    <div id="b-total"><span>Total, tax in</span><b id="b-sum">¥0</b></div>
+    <div class="act"><button class="btn" id="checkout">Check out</button><button class="btn o" id="keep">Keep looking</button></div></div>
+</aside>
+
+<div id="receipt" role="dialog" aria-modal="true" aria-label="Your receipt">
+  <div class="in"><img id="r-img" alt="Your receipt"><div class="row"><a class="btn" id="r-save" download="yoake-receipt.png">Save receipt</a><button class="btn o" id="r-close">Back to the store</button></div></div>
+</div>
+
+<div id="home" role="button" tabindex="0" aria-label="Step inside">
+  <div><canvas class="mk" id="homeMark" width="128" height="128"></canvas>
+  <div class="w">YOAKE</div><div class="j jp">夜明けまで営業 · Open until dawn</div>
+  <div class="t" id="homeTime">Kōenji, Tokyo</div>
+  <div class="go">Step inside</div></div>
+  <div class="note">Live from Tokyo · Sound on</div>
+</div>
+
+<script type="module">
+import * as THREE from "three";
+import {GLTFLoader} from "three/addons/loaders/GLTFLoader.js";
+import {MeshoptDecoder} from "three/addons/libs/meshopt_decoder.module.js";
+import {GLTFExporter} from "three/addons/exporters/GLTFExporter.js";
+import {RoomEnvironment} from "three/addons/environments/RoomEnvironment.js";
+import {OrbitControls} from "three/addons/controls/OrbitControls.js";
+import {RoundedBoxGeometry} from "three/addons/geometries/RoundedBoxGeometry.js";
+import {EffectComposer} from "three/addons/postprocessing/EffectComposer.js";
+import {RenderPass} from "three/addons/postprocessing/RenderPass.js";
+import {GTAOPass} from "three/addons/postprocessing/GTAOPass.js";
+import {UnrealBloomPass} from "three/addons/postprocessing/UnrealBloomPass.js";
+import {ShaderPass} from "three/addons/postprocessing/ShaderPass.js";
+import {OutputPass} from "three/addons/postprocessing/OutputPass.js";
+import {HorizontalTiltShiftShader} from "three/addons/shaders/HorizontalTiltShiftShader.js";
+import {VerticalTiltShiftShader} from "three/addons/shaders/VerticalTiltShiftShader.js";
+
+const $ = id => document.getElementById(id);
+const Q = new URLSearchParams(location.search);
+
+// ============ the product line (fictional brand, real kinds of konbini food) ============
+// kind sets the 3D shape; bg/ink are the package colours; prices in yen before tax
+const CORE = [
+  {id:"sake", kind:"onigiri", name:"Salmon onigiri", jp:"鮭", en:"SALMON", no:"01", bg:"#F08A6C", ink:"#2A1A16", price:160,
+   text:"Grilled, salted salmon in rice. The film keeps the nori apart from the rice until you open it, so it stays crisp."},
+  {id:"ume", kind:"onigiri", name:"Pickled plum onigiri", jp:"梅", en:"UME", no:"02", bg:"#C8323C", ink:"#FFF3EC", price:140,
+   text:"A sour umeboshi in the middle. One of the oldest fillings there is."},
+  {id:"tunamayo", kind:"onigiri", name:"Tuna mayo onigiri", jp:"ツナマヨ", en:"TUNA MAYO", no:"03", bg:"#F2C94C", ink:"#2B2F5C", price:150,
+   text:"Tuna mixed with mayonnaise. Usually the first to sell out."},
+  {id:"hojicha", kind:"bottle", name:"Roasted green tea", jp:"ほうじ茶", en:"HOJICHA", bg:"#8A5A3B", ink:"#F4EEDF", liquid:"#7A4A2A", cap:"#3B2A20", price:150, size:"525 ml",
+   text:"Green tea roasted until it smells like toast. Less bitter than green tea, and low in caffeine."},
+  {id:"melon", kind:"can", name:"Melon soda", jp:"メロンソーダ", en:"MELON SODA", bg:"#3FB37F", ink:"#FFFFFF", price:140, size:"350 ml",
+   text:"Bright green, very sweet, and closer to melon candy than to melon."},
+  {id:"nori", kind:"bag", name:"Nori chips", jp:"のりチップス", en:"NORI CHIPS", bg:"#1F3B2C", ink:"#D9F27A", price:180, size:"60 g",
+   text:"Thin potato chips dusted with green nori and salt."},
+  {id:"melonpan", kind:"bun", name:"Melon bread", jp:"メロンパン", en:"MELON PAN", bg:"#F4EEDF", ink:"#2B2F5C", price:160,
+   text:"A sweet bun with a crackly cookie crust, scored to look like a melon. It's named for its looks; there's usually no melon in it."},
+  {id:"miso", kind:"cup", name:"Miso ramen cup", jp:"味噌ラーメン", en:"MISO RAMEN", bg:"#E8693B", ink:"#FFF6E8", price:230, size:"Hot water · 3 min",
+   text:"Instant ramen in a rich miso broth. There's a hot water tap by the register."},
+  {id:"tamago", kind:"sando", name:"Egg sandwich", jp:"たまごサンド", en:"TAMAGO SANDO", bg:"#F7D046", ink:"#2B2F5C", price:280,
+   text:"Soft white bread, crusts off, with a thick layer of creamy egg salad. A konbini classic."},
+  {id:"senbei", kind:"bag", name:"Soy rice crackers", jp:"醤油せんべい", en:"SENBEI", bg:"#B5542C", ink:"#FFF1D6", price:200, size:"8 pieces",
+   text:"Crunchy rice crackers glazed with soy sauce and grilled."},
+  {id:"curry", kind:"bun", name:"Curry bread", jp:"カレーパン", en:"CURRY PAN", bg:"#F2B632", ink:"#3B1E0E", crust:["#C9852F", "#A9681F"], price:180,
+   text:"A fried bun with Japanese curry inside and a crunchy breadcrumb crust."},
+  {id:"shio", kind:"cup", name:"Salt ramen cup", jp:"塩ラーメン", en:"SHIO RAMEN", bg:"#2B6CB0", ink:"#FFFFFF", price:220, size:"Hot water · 3 min",
+   text:"A light, clear salt broth. The quiet one on the shelf."},
+  {id:"nikuman", kind:"nikuman", name:"Pork bun", jp:"肉まん", en:"NIKUMAN", bg:"#F4EEDF", ink:"#2B2F5C", price:180,
+   text:"A soft steamed bun filled with pork. It lives in the warmer by the register."},
+];
+// two limited items that change with the real season in Tokyo
+const SEASONAL = {
+  autumn:[{id:"imo", kind:"bottle", name:"Roasted sweet potato latte", jp:"焼き芋ラテ", en:"YAKI-IMO LATTE", bg:"#6B3E8E", ink:"#F7D26A", liquid:"#D9A86C", cap:"#F7D26A", price:220, size:"280 ml",
+           text:"Milk and roasted sweet potato. Sweet potato is the taste of a Tokyo autumn."},
+          {id:"kuri", kind:"pudding", name:"Chestnut pudding", jp:"栗プリン", en:"MARRON PUDDING", bg:"#7A4A2A", ink:"#F4EEDF", top:"#C99A5B", price:260,
+           text:"A soft chestnut custard with a layer of bitter caramel at the bottom."}],
+  winter:[{id:"yuzu", kind:"bottle", name:"Hot yuzu honey", jp:"ゆずはちみつ", en:"YUZU HONEY", bg:"#F2B632", ink:"#3B2A20", liquid:"#F2C14E", cap:"#3B2A20", price:170, size:"280 ml",
+           text:"Yuzu citrus and honey, from the hot shelf. Made for cold hands."},
+          {id:"ichigo", kind:"pudding", name:"Strawberry milk pudding", jp:"いちごミルクプリン", en:"STRAWBERRY MILK", bg:"#F3A6B5", ink:"#7A1F35", top:"#F7C9D2", price:240,
+           text:"A pink milk pudding with strawberry sauce. Strawberries peak in Japan in winter."}],
+  spring:[{id:"sakuralatte", kind:"bottle", name:"Sakura latte", jp:"さくらラテ", en:"SAKURA LATTE", bg:"#F2B8C6", ink:"#6B2340", liquid:"#F5D3DA", cap:"#6B2340", price:200, size:"280 ml",
+           text:"Milk with a little salted cherry blossom. On the shelves for a few weeks a year."},
+          {id:"sakurapudding", kind:"pudding", name:"Sakura pudding", jp:"さくらプリン", en:"SAKURA PUDDING", bg:"#E7A1B0", ink:"#FFFFFF", top:"#F5D3DA", price:240,
+           text:"A pale pink pudding scented with cherry leaf."}],
+  summer:[{id:"ramune", kind:"can", name:"Ramune soda", jp:"ラムネ", en:"RAMUNE", bg:"#6EC6E8", ink:"#163A5C", price:150, size:"350 ml",
+           text:"Lemon-lime soda, the taste of summer festivals."},
+          {id:"mango", kind:"pudding", name:"Mango pudding", jp:"マンゴープリン", en:"MANGO PUDDING", bg:"#F5A623", ink:"#4A2A00", top:"#F8C25A", price:240,
+           text:"A cold mango pudding with a little cream on top."}],
+};
+const CAT = {id:"cat", name:"The night cat", jp:"夜の猫", text:"Sleeps by the vending machine because it's warm. Not for sale.", price:0};
+
+// ============ Tokyo time, season, deliveries ============
+const DELIV = [3, 11, 19];                                  // stylised delivery times, Tokyo
+const fmtParts = new Intl.DateTimeFormat("en-US", {timeZone:"Asia/Tokyo", hour12:false, year:"numeric", month:"2-digit", day:"2-digit", hour:"2-digit", minute:"2-digit", second:"2-digit", weekday:"short"});
+let tOffset = 0;
+if (Q.has("t")){ const [a, b="0"] = Q.get("t").split(":"); tOffset = null; var tWant = +a + +b/60; }
+function tokyo(){
+  const p = Object.fromEntries(fmtParts.formatToParts(new Date()).map(x => [x.type, x.value]));
+  let h = (+p.hour % 24) + +p.minute/60 + +p.second/3600;
+  if (tOffset === null) tOffset = tWant - h;               // ?t=03:05 shifts the clock but keeps it running
+  h = ((h + tOffset) % 24 + 24) % 24;
+  const mo = Q.has("month") ? +Q.get("month") : +p.month;
+  return {h, H:Math.floor(h), M:Math.floor((h % 1) * 60), y:+p.year, mo, d:+p.day, wd:p.weekday};
+}
+const seasonOf = mo => mo <= 2 || mo === 12 ? "winter" : mo <= 5 ? "spring" : mo <= 8 ? "summer" : "autumn";
+const T0 = tokyo();
+const PRODUCTS = [...CORE, ...SEASONAL[seasonOf(T0.mo)].map(p => ({...p, limited:true}))];
+const byId = Object.fromEntries(PRODUCTS.concat([CAT]).map(p => [p.id, p]));
+const clock12 = (H, M) => `${(H % 12) || 12}:${String(M).padStart(2, "0")} ${H < 12 ? "AM" : "PM"}`;
+function delivery(h){
+  for (const D of DELIV){ const m = (((h - D + 12) % 24 + 24) % 24 - 12) * 60; if (m >= -6 && m <= 24) return {D, m}; }
+  return null;
+}
+function sinceLast(h){ let best = 99; for (const D of DELIV){ const s = ((h - D) % 24 + 24) % 24; if (s < best) best = s; } return best; }
+function nextDelivery(h){ let best = 99, at = 0; for (const D of DELIV){ const s = ((D - h) % 24 + 24) % 24; if (s < best){ best = s; at = D; } } return {at, in:best}; }
+
+// ============ weather (Open-Meteo, no key); ?wx=rain|snow|clear to force ============
+const WX = {code:0, temp:null, rain:0, snow:0, label:"", ok:false};
+const WMO = c => c === 0 ? "Clear" : c <= 2 ? "Partly cloudy" : c === 3 ? "Cloudy" : c <= 48 ? "Fog" : c <= 57 ? "Drizzle" : c <= 67 ? "Rain" : c <= 77 ? "Snow" : c <= 82 ? "Showers" : c <= 86 ? "Snow showers" : "Thunderstorm";
+async function weather(){
+  if (Q.has("wx")){ const w = Q.get("wx"); Object.assign(WX, {code:w === "rain" ? 63 : w === "snow" ? 73 : 0, temp:w === "snow" ? 1 : 14, ok:true}); }
+  else try {
+    const ctl = new AbortController(); setTimeout(() => ctl.abort(), 6000);
+    const r = await fetch("https://api.open-meteo.com/v1/forecast?latitude=35.705&longitude=139.649&current=temperature_2m,precipitation,weather_code&timezone=Asia%2FTokyo", {signal:ctl.signal});
+    const j = await r.json(); Object.assign(WX, {code:j.current.weather_code, temp:Math.round(j.current.temperature_2m), ok:true});
+  } catch(e){ WX.ok = false; }
+  const c = WX.code;
+  WX.rain = (c >= 51 && c <= 67) || (c >= 80 && c <= 82) || c >= 95 ? (c === 51 || c === 61 || c === 80 ? .5 : 1) : 0;
+  WX.snow = (c >= 71 && c <= 77) || c === 85 || c === 86 ? 1 : 0;
+  WX.label = WX.ok ? WMO(c) : "";
+}
+
+// ============ renderer / scene ============
+const canvas = $("gl");
+const small = matchMedia("(max-width:700px)").matches;
+const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
+const renderer = new THREE.WebGLRenderer({canvas, antialias:true});
+renderer.setPixelRatio(Math.min(devicePixelRatio, small ? 1.5 : 2));
+renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.toneMappingExposure = .92;
+renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x1D2238);
+scene.fog = new THREE.Fog(0x1D2238, 12, 26);
+scene.environment = new THREE.PMREMGenerator(renderer).fromScene(new RoomEnvironment(), .04).texture;
+scene.environmentIntensity = .4;
+
+const camera = new THREE.PerspectiveCamera(32, 1, .05, 80);
+camera.position.set(1.2, 5.8, 9.4);
+const controls = new OrbitControls(camera, canvas);
+controls.target.set(.1, .5, -.55); controls.enableDamping = true; controls.dampingFactor = .06; controls.enablePan = false;
+controls.minPolarAngle = .45; controls.maxPolarAngle = 1.22; controls.minAzimuthAngle = -.95; controls.maxAzimuthAngle = .95;
+controls.rotateSpeed = matchMedia("(pointer:coarse)").matches ? .4 : .55;
+controls.autoRotate = !reduce; controls.autoRotateSpeed = .2;
+
+const hemi = new THREE.HemisphereLight(0xEEF0FF, 0x504A60, .5); scene.add(hemi);
+const sun = new THREE.DirectionalLight(0xFFEBD2, 1.6); sun.castShadow = true;
+sun.shadow.mapSize.set(small ? 1024 : 2048, small ? 1024 : 2048);
+Object.assign(sun.shadow.camera, {left:-6, right:6, top:6, bottom:-6, near:1, far:24}); sun.shadow.radius = 5; sun.shadow.bias = -.0006;
+scene.add(sun, sun.target);
+
+let seed = 11; const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+const texLoader = new THREE.TextureLoader();
+const clayBump = texLoader.load("assets/tex/clay.jpg"); clayBump.wrapS = clayBump.wrapT = THREE.RepeatWrapping; clayBump.repeat.set(2, 2);
+// every hand-built surface gets the same fal-generated clay texture as a bump map, so nothing reads as CAD
+const clay = (hex, rough=.88, extra={}) => new THREE.MeshStandardMaterial({color:hex, roughness:rough, metalness:0, ...(extra.map ? {} : {bumpMap:clayBump, bumpScale:2.2}), ...extra});
+function wobble(geo, amp=.007){ const p = geo.attributes.position, v = new THREE.Vector3();
+  for (let i = 0; i < p.count; i++){ v.fromBufferAttribute(p, i); const n = Math.sin(v.x*5.3 + v.y*2.1) * Math.sin(v.y*4.7 + v.z*3.3) * Math.sin(v.z*5.9 + v.x*1.7);
+    const len = v.length() || 1; v.addScaledVector(v, n * amp / len); p.setXYZ(i, v.x, v.y, v.z); }
+  geo.computeVertexNormals(); return geo; }
+const RB = (w, h, d, r=.03, s=3) => { const m = Math.min(w, h, d); return wobble(new RoundedBoxGeometry(w, h, d, Math.max(s, 4), Math.min(Math.max(r, .045), m * .45)), Math.min(.008, m * .06)); };
+const ENV = [];   // static scenery, in build order; the bake maps env_<i> back to ENV[i]
+function put(geo, mat, x, y, z, parent=scene, shadow=true){ const m = new THREE.Mesh(geo, mat); if (parent === scene) ENV.push(m); m.position.set(x, y, z); m.castShadow = shadow; m.receiveShadow = true; parent.add(m); return m; }
+
+// ============ type and packaging, drawn on canvas ============
+const FJ = '"Hiragino Sans","Hiragino Kaku Gothic ProN","Noto Sans JP","Yu Gothic",sans-serif';
+const FE = '"Helvetica Neue",Helvetica,Arial,sans-serif';
+function tex(w, h, draw){ const c = document.createElement("canvas"); c.width = w; c.height = h; const g = c.getContext("2d"); draw(g, w, h);
+  const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 8; t.userData.canvas = c; return t; }
+function font(g, weight, family, size){ g.font = `${weight} ${size}px ${family}`; }
+function fit(g, s, weight, family, size, maxW){ font(g, weight, family, size); const w = g.measureText(s).width; if (w > maxW){ size *= maxW / w; font(g, weight, family, size); } return size; }
+function spaced(g, s, x, y, sp){ try { g.letterSpacing = sp + "px"; } catch(e){} g.fillText(s, x, y); try { g.letterSpacing = "0px"; } catch(e){} }
+// the YOAKE mark: a crescent with the sun coming up under it
+function mark(g, x, y, r, fg, bg){ g.fillStyle = fg; g.beginPath(); g.arc(x, y, r, 0, 7); g.fill();
+  g.fillStyle = bg; g.beginPath(); g.arc(x + r*.42, y - r*.3, r*.8, 0, 7); g.fill();
+  g.fillStyle = fg; g.beginPath(); g.arc(x + r*.78, y + r*.62, r*.2, 0, 7); g.fill(); }
+function limitedBadge(g, x, y, s){ g.save(); g.translate(x, y); g.rotate(-.12); g.fillStyle = "#E8693B"; g.fillRect(-s*1.6, -s*.55, s*3.2, s*1.1);
+  g.fillStyle = "#fff"; font(g, 800, FJ, s*.62); g.textAlign = "center"; g.textBaseline = "middle"; g.fillText("期間限定", 0, s*.04); g.restore(); }
+function barcode(g, x, y, w, h, ink){ g.fillStyle = ink; let s = 7; for (let i = 0; i < 46; i++){ s = (s * 16807) % 2147483647; const bw = 1 + (s % 3); if (i % 2 === 0) g.fillRect(x + i * w/46, y, bw * w/140, h); } }
+
+// wrap label for bottles, cans and cups; the front sits at the centre of the canvas
+function wrapLabel(p, h=300){
+  return tex(1024, h, (g, w) => {
+    g.fillStyle = p.bg; g.fillRect(0, 0, w, h);
+    g.textAlign = "center"; g.textBaseline = "alphabetic"; g.fillStyle = p.ink;
+    mark(g, w/2, h*.2, h*.07, p.ink, p.bg);
+    const js = fit(g, p.jp, 800, FJ, h*.34, w*.3); g.fillText(p.jp, w/2, h*.62);
+    font(g, 700, FE, h*.075); spaced(g, p.en, w/2, h*.78, h*.012);
+    font(g, 400, FE, h*.06); g.globalAlpha = .8; g.fillText(p.size || "", w/2, h*.9); g.globalAlpha = 1;
+    // back of the pack: a stripe and a barcode
+    g.fillStyle = p.ink; g.globalAlpha = .18; g.fillRect(0, h*.08, w*.18, h*.04); g.fillRect(w*.82, h*.08, w*.18, h*.04); g.globalAlpha = 1;
+    g.fillStyle = "#fff"; g.fillRect(w*.04, h*.55, w*.1, h*.3); barcode(g, w*.045, h*.58, w*.09, h*.22, "#111");
+    if (p.limited) limitedBadge(g, w*.62, h*.17, h*.12);
+  });
+}
+function lidLabel(p){ return tex(256, 256, (g, w, h) => { g.fillStyle = "#F7F4EC"; g.fillRect(0, 0, w, h);
+  g.fillStyle = p.bg; g.beginPath(); g.arc(w/2, h/2, w*.46, 0, 7); g.fill();
+  mark(g, w/2, h*.3, w*.08, p.ink, p.bg); g.fillStyle = p.ink; g.textAlign = "center";
+  fit(g, p.jp, 800, FJ, w*.2, w*.7); g.fillText(p.jp, w/2, h*.62); font(g, 700, FE, w*.055); spaced(g, p.en, w/2, h*.76, 2); }); }
+function stickerLabel(p){ return tex(256, 256, (g, w, h) => {
+  g.fillStyle = p.bg; g.beginPath(); g.roundRect(6, 6, w-12, h-12, 26); g.fill();
+  g.fillStyle = p.ink; g.textAlign = "center"; font(g, 700, FE, 20); spaced(g, "No." + p.no, w/2, 44, 3);
+  fit(g, p.jp, 800, FJ, 120, w*.78); g.textBaseline = "middle"; g.fillText(p.jp, w/2, h*.52);
+  g.textBaseline = "alphabetic"; font(g, 700, FE, 20); spaced(g, p.en, w/2, h-30, 2); }); }
+const tabTex = tex(64, 256, (g, w, h) => { g.fillStyle = "#D23B3B"; g.fillRect(0, 0, w, h); g.fillStyle = "#fff"; g.textAlign = "center"; g.textBaseline = "middle";
+  font(g, 700, FE, 28); ["1", "2", "3"].forEach((n, i) => { g.beginPath(); g.arc(w/2, h*(.2 + i*.3), 20, 0, 7); g.strokeStyle = "#fff"; g.lineWidth = 3; g.stroke(); g.fillText(n, w/2, h*(.2 + i*.3) + 1); }); });
+function bagLabel(p){ return tex(320, 400, (g, w, h) => {
+  g.fillStyle = p.bg; g.fillRect(0, 0, w, h);
+  g.fillStyle = p.ink; g.globalAlpha = .22; for (let i = 0; i < 9; i++){ g.beginPath(); g.ellipse(40 + (i*97) % 260, 250 + (i*53) % 110, 34, 24, i, 0, 7); g.fill(); } g.globalAlpha = 1;
+  mark(g, 46, 46, 18, p.ink, p.bg); g.textAlign = "center"; g.fillStyle = p.ink;
+  fit(g, p.jp, 900, FJ, 70, w*.84); g.fillText(p.jp, w/2, h*.42);
+  font(g, 700, FE, 22); spaced(g, p.en, w/2, h*.52, 4); font(g, 400, FE, 18); g.fillText(p.size || "", w/2, h - 26); }); }
+function bunLabel(p){ return tex(256, 128, (g, w, h) => { g.fillStyle = "#fff"; g.beginPath(); g.roundRect(4, 4, w-8, h-8, 18); g.fill();
+  g.fillStyle = p.ink; g.textAlign = "center"; fit(g, p.jp, 800, FJ, 56, w*.8); g.fillText(p.jp, w/2, h*.58); font(g, 700, FE, 16); spaced(g, p.en, w/2, h*.84, 2); }); }
+function puddingBand(p){ return tex(512, 128, (g, w, h) => { g.fillStyle = p.top || "#E9D8A8"; g.fillRect(0, 0, w, h); g.fillStyle = "#5A3418"; g.fillRect(0, h*.78, w, h*.22);
+  g.fillStyle = "rgba(255,255,255,.35)"; g.fillRect(0, 0, w, h*.12); }); }
+const crustTex = ([a, b] = ["#E7B456", "#C78E33"]) => tex(256, 256, (g, w, h) => { g.fillStyle = a; g.fillRect(0, 0, w, h); g.strokeStyle = b; g.lineWidth = 7;
+  for (let i = -w; i < w*2; i += 42){ g.beginPath(); g.moveTo(i, 0); g.lineTo(i + h, h); g.stroke(); g.beginPath(); g.moveTo(i, h); g.lineTo(i + h, 0); g.stroke(); } });
+
+// ============ the products as clay models (front faces +z) ============
+const wrapMat = new THREE.MeshPhysicalMaterial({color:0xFFF8EC, roughness:.35, metalness:0, transparent:true, opacity:.18, depthWrite:false, clearcoat:1});
+function roundTri(r, c){ const s = new THREE.Shape(); const P = [0,1,2].map(i => { const a = Math.PI/2 + i*2*Math.PI/3; return new THREE.Vector2(Math.cos(a)*r, Math.sin(a)*r); });
+  for (let i = 0; i < 3; i++){ const p = P[i], pr = P[(i+2)%3], nx = P[(i+1)%3]; const a = p.clone().add(pr.clone().sub(p).setLength(c)), b = p.clone().add(nx.clone().sub(p).setLength(c));
+    i === 0 ? s.moveTo(a.x, a.y) : s.lineTo(a.x, a.y); s.quadraticCurveTo(p.x, p.y, b.x, b.y); } s.closePath(); return s; }
+const triGeo = new THREE.ExtrudeGeometry(roundTri(.12, .035), {depth:.04, bevelEnabled:true, bevelThickness:.014, bevelSize:.012, bevelSegments:3, curveSegments:8}); triGeo.center();
+const cache = {};
+function build(p){
+  if (cache[p.id]) return cache[p.id].clone(true);
+  const G = new THREE.Group();
+  const shadow = m => { m.castShadow = true; m.receiveShadow = true; return m; };
+  if (p.kind === "onigiri"){
+    const rice = shadow(new THREE.Mesh(triGeo, clay(0xF6F3EA, .95))); rice.position.y = .06; G.add(rice);
+    const nori = shadow(new THREE.Mesh(RB(.17, .05, .072, .015), clay(0x1E2A22, .7))); nori.position.y = .018; G.add(nori);
+    const st = new THREE.Mesh(new THREE.PlaneGeometry(.085, .085), clay(0xffffff, .6, {map:stickerLabel(p)})); st.position.set(0, .085, .036); G.add(st);
+    const tab = new THREE.Mesh(new THREE.PlaneGeometry(.018, .045), clay(0xffffff, .6, {map:tabTex})); tab.position.set(0, .02, .0375); G.add(tab);
+    const film = new THREE.Mesh(triGeo, wrapMat); film.scale.set(1.07, 1.07, 1.25); film.position.y = .06; G.add(film);
+  } else if (p.kind === "bottle"){
+    const prof = [[0,0],[.04,0],[.045,.012],[.045,.15],[.03,.195],[.016,.218],[.016,.24],[0,.24]].map(([x,y]) => new THREE.Vector2(x, y));
+    const body = shadow(new THREE.Mesh(new THREE.LatheGeometry(prof, 32), new THREE.MeshPhysicalMaterial({color:p.liquid, roughness:.12, clearcoat:1, transmission:0}))); G.add(body);
+    const lab = new THREE.Mesh(new THREE.CylinderGeometry(.0462, .0462, .085, 40, 1, true, Math.PI), clay(0xffffff, .5, {map:wrapLabel(p)})); lab.position.y = .085; G.add(lab);
+    const cap = shadow(new THREE.Mesh(new THREE.CylinderGeometry(.019, .019, .024, 24), clay(p.cap, .5))); cap.position.y = .25; G.add(cap);
+  } else if (p.kind === "can"){
+    const side = clay(0xffffff, .35, {map:wrapLabel(p), metalness:.2}), metal = new THREE.MeshStandardMaterial({color:0xC9CCD2, roughness:.3, metalness:.9});
+    const can = shadow(new THREE.Mesh(new THREE.CylinderGeometry(.034, .034, .125, 40, 1, false, Math.PI), [side, metal, metal])); can.position.y = .0625; G.add(can);
+    const rim = new THREE.Mesh(new THREE.TorusGeometry(.03, .004, 8, 32), metal); rim.rotation.x = Math.PI/2; rim.position.y = .126; G.add(rim);
+  } else if (p.kind === "cup"){
+    const cup = shadow(new THREE.Mesh(new THREE.CylinderGeometry(.056, .044, .11, 40, 1, false, Math.PI), [clay(0xffffff, .6, {map:wrapLabel(p, 340)}), clay(0xffffff, .6, {map:lidLabel(p)}), clay(0xEDE7DA)]));
+    cup.position.y = .055; G.add(cup);
+  } else if (p.kind === "pudding"){
+    const body = shadow(new THREE.Mesh(new THREE.CylinderGeometry(.042, .034, .058, 36, 1, false, Math.PI), [clay(0xffffff, .3, {map:puddingBand(p)}), clay(0xffffff, .5, {map:lidLabel(p)}), clay(0x5A3418)]));
+    body.position.y = .029; G.add(body);
+    const glass = new THREE.Mesh(new THREE.CylinderGeometry(.045, .036, .062, 36, 1, true), wrapMat); glass.position.y = .031; G.add(glass);
+  } else if (p.kind === "bag"){
+    const geo = new THREE.BoxGeometry(.15, .19, .055, 10, 10, 4), pos = geo.attributes.position;
+    for (let i = 0; i < pos.count; i++){ const x = pos.getX(i), y = pos.getY(i); const k = (1 - Math.pow(Math.abs(x)/.075, 4)*.85) * (1 - Math.pow(Math.abs(y)/.095, 6)*.9); pos.setZ(i, pos.getZ(i) * Math.max(.05, k)); }
+    geo.computeVertexNormals();
+    const side = clay(new THREE.Color(p.bg).getHex(), .45), front = clay(0xffffff, .4, {map:bagLabel(p)});
+    const bag = shadow(new THREE.Mesh(geo, [side, side, side, side, front, side])); bag.position.y = .095; G.add(bag);
+  } else if (p.kind === "bun"){
+    const bun = shadow(new THREE.Mesh(new THREE.SphereGeometry(.07, 32, 16), clay(0xffffff, .8, {map:crustTex(p.crust)}))); bun.scale.set(1, .55, 1); bun.position.y = .04; G.add(bun);
+    const bag = new THREE.Mesh(RB(.17, .09, .16, .03), wrapMat); bag.position.y = .045; G.add(bag);
+    const st = new THREE.Mesh(new THREE.PlaneGeometry(.1, .05), clay(0xffffff, .6, {map:bunLabel(p)})); st.position.set(0, .07, .081); st.rotation.x = -.5; G.add(st);
+  } else if (p.kind === "sando"){
+    const wedge = new THREE.Shape(); wedge.moveTo(-.08, 0); wedge.lineTo(.08, 0); wedge.lineTo(-.08, .14); wedge.closePath();
+    const wg = new THREE.ExtrudeGeometry(wedge, {depth:.026, bevelEnabled:true, bevelThickness:.006, bevelSize:.006, bevelSegments:2});
+    [[-.035, 0xF6EFDF], [-.006, 0xF7D046], [.022, 0xF6EFDF]].forEach(([z, c]) => { const s = shadow(new THREE.Mesh(wg, clay(c, .9))); s.position.z = z - .013; G.add(s); });
+    const pack = new THREE.Mesh(new THREE.ExtrudeGeometry(wedge, {depth:.1, bevelEnabled:false}), wrapMat); pack.scale.set(1.12, 1.1, 1); pack.position.set(-.004, -.004, -.05); G.add(pack);
+    const st = new THREE.Mesh(new THREE.PlaneGeometry(.12, .04), clay(0xffffff, .6, {map:bunLabel(p)})); st.position.set(-.01, .03, .052); G.add(st);
+  } else if (p.kind === "nikuman"){
+    const bun = shadow(new THREE.Mesh(new THREE.SphereGeometry(.06, 32, 16), clay(0xFBF8F1, .9))); bun.scale.set(1, .78, 1); bun.position.y = .045; G.add(bun);
+    const top = new THREE.Mesh(new THREE.ConeGeometry(.018, .022, 12), clay(0xF4EFE4, .9)); top.position.y = .098; G.add(top);
+  }
+  G.userData.pid = p.id; cache[p.id] = G; return G.clone(true);
+}
+
+// ============ the diorama: street corner, sidewalk, an open-front shop ============
+// which way each generated model needs turning so its front faces the street (+z); the truck faces +x, the way it drives
+// a multiply over each generated texture, pulling white plastic to cream and the mint bike to our matcha
+const TINT = {vending:0xF6EAD2, truck:0xF6EAD2, atm:0xF3E6CF, bike:0xB9B49A, bins:0xF0E2C8, coffee:0xEBDDC6, cat:0xE8DCCB};
+const PROP_ROT = {vending:0, bins:0, bike:0, atm:0, coffee:0, cat:0, truck:0};
+const PAL = {indigo:0x2E3160, cream:0xF1E8D6, wall:0xE6DAC3, steel:0xCDBFA8, dark:0x3A3532, shelf:0xE2D5BC, white:0xF4ECDC};
+const base = put(RB(8.2, .5, 6.4, .12, 4), clay(0x4A4440), 0, -.25, .35);
+// street, with a wet-look material that changes with the weather
+const asphalt = texLoader.load("assets/tex/asphalt.jpg"); asphalt.colorSpace = THREE.SRGBColorSpace; asphalt.wrapS = asphalt.wrapT = THREE.RepeatWrapping; asphalt.repeat.set(6, 1.4);
+const streetMat = new THREE.MeshStandardMaterial({color:0x9A9CA4, map:asphalt, bumpMap:asphalt, bumpScale:2, roughness:.85, metalness:0});
+const street = put(new THREE.BoxGeometry(8.2, .04, 1.8), streetMat, 0, .0, 2.55, scene, false);
+const roadMark = tex(512, 256, (g, w, h) => { g.clearRect(0, 0, w, h); g.fillStyle = "rgba(240,240,236,.92)"; font(g, 900, FJ, 150); g.textAlign = "center"; g.textBaseline = "middle"; g.fillText("止まれ", w/2, h/2); });
+const stop = new THREE.Mesh(new THREE.PlaneGeometry(1.3, .65), new THREE.MeshStandardMaterial({map:roadMark, transparent:true, roughness:.8})); stop.rotation.x = -Math.PI/2; stop.position.set(2.6, .025, 2.6); scene.add(stop);
+const edge = new THREE.Mesh(new THREE.PlaneGeometry(8.2, .05), clay(0xEDE3D0)); edge.rotation.x = -Math.PI/2; edge.position.set(0, .024, 1.78); scene.add(edge);
+const puddleMat = new THREE.MeshStandardMaterial({color:0x3A3F50, roughness:.05, metalness:.3, transparent:true, opacity:0});
+[[-1.6, 2.4, .55], [.9, 2.9, .4], [3.1, 2.1, .32], [-3.0, 1.35, .25]].forEach(([x, z, r]) => { const m = new THREE.Mesh(new THREE.CircleGeometry(r, 32), puddleMat); m.rotation.x = -Math.PI/2; m.scale.y = .6; m.position.set(x, .025 + (z < 1.7 ? .04 : 0), z); scene.add(m); });
+const paverTex = tex(256, 256, (g, w, h) => { g.fillStyle = "#A49A8B"; g.fillRect(0, 0, w, h); g.strokeStyle = "#8C8273"; g.lineWidth = 4; for (let i = 0; i <= 4; i++){ g.beginPath(); g.moveTo(i*w/4, 0); g.lineTo(i*w/4, h); g.stroke(); g.beginPath(); g.moveTo(0, i*h/4); g.lineTo(w, i*h/4); g.stroke(); } });
+paverTex.wrapS = paverTex.wrapT = THREE.RepeatWrapping; paverTex.repeat.set(8, 1.2);
+const walkMat = new THREE.MeshStandardMaterial({color:0xffffff, map:paverTex, roughness:.9});
+put(new THREE.BoxGeometry(8.2, .1, 1.1), walkMat, 0, .05, 1.1);
+// the shop: floor, two walls, a sign across the front
+const S = {x0:-2.3, x1:2.3, z0:-2.4, z1:.55, h:1.75};
+const tileTex = tex(256, 256, (g, w, h) => { g.fillStyle = "#E9DFCB"; g.fillRect(0, 0, w, h); g.fillStyle = "#D9CCB2"; g.fillRect(0, 0, w/2, h/2); g.fillRect(w/2, h/2, w/2, h/2); g.strokeStyle = "#D4CDBC"; g.lineWidth = 3; g.strokeRect(0, 0, w, h); });
+tileTex.wrapS = tileTex.wrapT = THREE.RepeatWrapping; tileTex.repeat.set(9, 6);
+put(new THREE.BoxGeometry(S.x1 - S.x0, .1, S.z1 - S.z0), new THREE.MeshStandardMaterial({map:tileTex, roughness:.55}), 0, .06, (S.z0 + S.z1)/2);
+const wallMat = clay(PAL.wall, .92);
+put(RB(S.x1 - S.x0 + .14, S.h, .14, .03), wallMat, 0, S.h/2 + .1, S.z0 - .07);
+put(RB(.14, S.h, S.z1 - S.z0 + .14, .03), wallMat, S.x0 - .07, S.h/2 + .1, (S.z0 + S.z1)/2);
+const post = RB(.14, .6, .14, .03); put(post, clay(PAL.indigo, .7), S.x1 + .02, .4, S.z1); put(post, clay(PAL.indigo, .7), S.x0 - .07, .4, S.z1);
+const signTex = tex(2048, 160, (g, w, h) => {
+  g.fillStyle = "#2B2F5C"; g.fillRect(0, 0, w, h); g.fillStyle = "#E8693B"; g.fillRect(0, h - 22, w, 9); g.fillStyle = "#7FA05A"; g.fillRect(0, h - 11, w, 9);
+  mark(g, 120, h*.45, 42, "#F4EEDF", "#2B2F5C"); g.fillStyle = "#F4EEDF"; g.textBaseline = "middle";
+  font(g, 700, FE, 84); spaced(g, "YOAKE", 200, h*.47, 14); font(g, 400, FJ, 52); g.fillText("夜明け", 640, h*.47);
+  g.textAlign = "right"; font(g, 700, FE, 30); spaced(g, "OPEN UNTIL DAWN · 夜明けまで営業", w - 70, h*.47, 4); });
+const signMat = new THREE.MeshStandardMaterial({color:0xffffff, map:signTex, emissive:0xffffff, emissiveMap:signTex, emissiveIntensity:.0, roughness:.6});
+put(RB(S.x1 - S.x0 + .3, .44, .18, .04), clay(PAL.indigo), 0, S.h + .34, S.z0 - .02);
+const signFace = new THREE.Mesh(new THREE.PlaneGeometry(S.x1 - S.x0 + .24, .4), signMat); signFace.position.set(0, S.h + .34, S.z0 + .075); scene.add(signFace);
+// a low front wall either side of the door, so the shop still reads as a room
+put(RB(1.55, .3, .12, .03), clay(PAL.indigo, .7), S.x0 + .72, .25, S.z1); put(RB(1.4, .3, .12, .03), clay(PAL.indigo, .7), S.x1 - .7, .25, S.z1);
+// posters for the seasonal launch and the onigiri, inside on the left wall
+function poster(p, line, sub){ return tex(400, 560, (g, w, h) => {
+  g.fillStyle = p.bg; g.fillRect(0, 0, w, h); g.fillStyle = p.ink; g.textAlign = "left";
+  mark(g, 46, 50, 18, p.ink, p.bg); font(g, 700, FE, 18); spaced(g, "YOAKE", 76, 57, 4);
+  fit(g, p.jp, 900, FJ, 120, w - 60); g.fillText(p.jp, 30, h*.46);
+  font(g, 700, FE, 30); g.fillText(line, 30, h*.6); font(g, 400, FE, 20); g.globalAlpha = .85; g.fillText(sub, 30, h*.66); g.globalAlpha = 1;
+  g.beginPath(); g.arc(w - 80, h - 90, 56, 0, 7); g.fill(); g.fillStyle = p.bg; g.textAlign = "center"; font(g, 900, FE, 30); g.fillText("¥" + p.price, w - 80, h - 80);
+  if (p.limited) limitedBadge(g, 110, h - 90, 34);
+  for (let i = 0; i < 9000; i++){ g.fillStyle = Math.random() < .5 ? "rgba(255,255,255,.06)" : "rgba(0,0,0,.05)"; g.fillRect(Math.random()*w, Math.random()*h, 1.5, 1.5); } }); }
+const seasonalDrink = PRODUCTS.find(p => p.limited && p.kind !== "pudding");
+[[seasonalDrink, "New for " + seasonOf(T0.mo) + ".", "Here until it isn't.", -1.55], [byId.sake, "Crisp nori, always.", "Pull 1, 2, 3.", -.55]].forEach(([p, a, b, z]) => {
+  const m = new THREE.Mesh(new THREE.PlaneGeometry(.55, .77), clay(0xffffff, .85, {map:poster(p, a, b)})); m.rotation.y = Math.PI/2; m.position.set(S.x0 + .005, 1.12, z); scene.add(m); });
+// side sign on the left wall (the same type, sideways)
+const sideSign = new THREE.Mesh(new THREE.PlaneGeometry(2.4, .2), signMat); sideSign.rotation.y = -Math.PI/2; sideSign.position.set(S.x0 - .15, S.h - .1, -.9); scene.add(sideSign);
+
+// ---- inside: the fridge wall, the chiller, a gondola, the counter ----
+const PS = 1.5;                               // products are toy-scaled, a little larger than life
+const facings = [];                            // {pid, items:[mesh], hit, n, var}
+const hits = [];
+function facing(pid, x, y, z, n, dx, opts={}){
+  const p = byId[pid]; if (!p) return;
+  const items = [];
+  for (let i = 0; i < n; i++){ const m = build(p); m.scale.setScalar(PS); m.position.set(x + (i - (n-1)/2) * dx, y, z); if (opts.rotX) m.rotation.x = opts.rotX; if (opts.rotY) m.rotation.y = opts.rotY; scene.add(m); items.push(m); }
+  const w = n * dx + .06, hh = (opts.h || .26) * PS;
+  const hit = new THREE.Mesh(new THREE.BoxGeometry(w, hh, .22), new THREE.MeshBasicMaterial({visible:false}));
+  hit.position.set(x, y + hh/2, z); hit.userData.pid = pid; scene.add(hit); hits.push(hit);
+  facings.push({pid, items, hit, n, var:.6 + rnd()*.6});
+}
+// drinks fridge: five glowing doors on the back wall
+const FR = {x0:-2.15, x1:.2, z:-2.12, y0:.11, y1:1.62};
+const frSteel = clay(PAL.steel, .8);
+put(RB(FR.x1 - FR.x0 + .08, .1, .5, .02), frSteel, (FR.x0 + FR.x1)/2, FR.y1 + .03, FR.z - .02); put(RB(FR.x1 - FR.x0 + .08, .12, .5, .02), frSteel, (FR.x0 + FR.x1)/2, FR.y0, FR.z - .02);
+[FR.x0 - .02, FR.x1 + .02].forEach(x => put(RB(.06, FR.y1 - FR.y0 + .1, .5, .02), frSteel, x, (FR.y0 + FR.y1)/2, FR.z - .02));
+const glowMat = new THREE.MeshStandardMaterial({color:0xFFF6E6, emissive:0xFFF2DE, emissiveIntensity:.9, roughness:.9});
+put(new THREE.PlaneGeometry(FR.x1 - FR.x0 - .06, FR.y1 - FR.y0 - .1), glowMat, (FR.x0 + FR.x1)/2, (FR.y0 + FR.y1)/2, FR.z - .2, scene, false);
+const doorW = (FR.x1 - FR.x0) / 5;
+const drinkCols = ["hojicha", PRODUCTS.find(p => p.limited && (p.kind === "bottle" || p.kind === "can")).id, "melon", "hojicha", PRODUCTS.find(p => p.limited && (p.kind === "bottle" || p.kind === "can")).id];
+for (let d = 0; d < 5; d++){
+  const cx = FR.x0 + doorW*(d + .5);
+  put(RB(.035, FR.y1 - FR.y0, .05, .01), clay(PAL.dark, .4), FR.x0 + doorW*d + .01, (FR.y0 + FR.y1)/2, FR.z + .27);
+  [.2, .63, 1.06].forEach((y, t) => {
+    put(new THREE.BoxGeometry(doorW - .04, .02, .36), clay(PAL.shelf, .6), cx, y - .01, FR.z + .08, scene, false);
+    const pid = t === 1 && d === 2 ? "melon" : drinkCols[d];
+    facing(pid, cx, y, FR.z + .1, 3, .145, {h:.26});
+  });
+}
+const glass = new THREE.Mesh(new THREE.PlaneGeometry(FR.x1 - FR.x0, FR.y1 - FR.y0), new THREE.MeshPhysicalMaterial({color:0xffffff, roughness:.05, transparent:true, opacity:.1, depthWrite:false, clearcoat:1}));
+glass.position.set((FR.x0 + FR.x1)/2, (FR.y0 + FR.y1)/2, FR.z + .29); scene.add(glass);
+// open chiller: onigiri on top, pudding below
+const CH = {x0:.45, x1:2.15, z:-2.05};
+put(RB(CH.x1 - CH.x0, 1.35, .1, .03), clay(PAL.white, .8), (CH.x0 + CH.x1)/2, .78, CH.z - .26); put(RB(CH.x1 - CH.x0, .3, .62, .03), clay(PAL.white, .8), (CH.x0 + CH.x1)/2, .25, CH.z);
+[CH.x0, CH.x1].forEach(x => put(RB(.05, 1.35, .62, .02), clay(PAL.shelf, .8), x, .78, CH.z));
+put(RB(CH.x1 - CH.x0, .25, .62, .04), clay(PAL.indigo, .6), (CH.x0 + CH.x1)/2, 1.47, CH.z);
+const chillGlow = new THREE.Mesh(new THREE.PlaneGeometry(CH.x1 - CH.x0 - .1, .06), glowMat); chillGlow.position.set((CH.x0 + CH.x1)/2, 1.34, CH.z + .32); scene.add(chillGlow);
+const seasonalSweet = PRODUCTS.find(p => p.kind === "pudding").id;
+[[1.1, ["sake", "ume", "tunamayo"]], [.74, ["tamago", "tunamayo", "tamago"]], [.42, [seasonalSweet, seasonalSweet, "sake"]]].forEach(([y, row]) => {
+  put(new THREE.BoxGeometry(CH.x1 - CH.x0 - .06, .025, .5), clay(PAL.shelf, .7), (CH.x0 + CH.x1)/2, y - .012, CH.z + .08, scene, false);
+  row.forEach((pid, i) => facing(pid, CH.x0 + .3 + i*.55, y, CH.z + .1, 2, byId[pid].kind === "pudding" ? .15 : .21, {rotX:-.18, h:.2}));
+});
+// gondola in the middle: bread, chips, cup noodles
+const GO = {x:-.7, z:-.75, w:2.2};
+put(RB(GO.w, 1.0, .5, .04), clay(PAL.white, .8), GO.x, .6, GO.z - .05);
+put(RB(GO.w + .04, .06, .56, .02), clay(PAL.indigo, .6), GO.x, 1.12, GO.z - .05);
+[[.84, ["melonpan", "curry"], 3, .3, .14], [.5, ["nori", "senbei"], 3, .26, .3], [.17, ["miso", "shio"], 4, .22, .18]].forEach(([y, pids, n, dx, hh]) => {
+  put(new THREE.BoxGeometry(GO.w, .025, .26), clay(PAL.shelf, .7), GO.x, y - .012, GO.z + .3, scene, false);
+  pids.forEach((pid, i) => facing(pid, GO.x + (i ? .55 : -.55), y, GO.z + .3, n, dx, {h:hh}));
+});
+// counter with register, the bun warmer and a coffee machine
+put(RB(1.4, .82, .55, .04), clay(PAL.cream, .8), 1.45, .51, -.05);
+put(RB(1.46, .05, .6, .02), clay(PAL.indigo, .6), 1.45, .94, -.05);
+const reg = put(RB(.28, .14, .22, .03), clay(0x2E3038, .5), .95, 1.03, -.12);
+const regScreen = tex(128, 64, (g, w, h) => { g.fillStyle = "#0E2B22"; g.fillRect(0, 0, w, h); g.fillStyle = "#7CF2B5"; font(g, 700, FE, 30); g.textAlign = "center"; g.textBaseline = "middle"; g.fillText("¥0", w/2, h/2); });
+const regFace = new THREE.Mesh(new THREE.PlaneGeometry(.2, .1), new THREE.MeshStandardMaterial({map:regScreen, emissive:0xffffff, emissiveMap:regScreen, emissiveIntensity:.8})); regFace.position.set(.95, 1.16, -.09); regFace.rotation.x = -.5; scene.add(regFace);
+const warmer = put(RB(.42, .3, .3, .03), new THREE.MeshPhysicalMaterial({color:0xFFE9C4, roughness:.1, transparent:true, opacity:.35, clearcoat:1, depthWrite:false}), 1.5, 1.12, -.08);
+const warmGlow = new THREE.PointLight(0xFFC27A, 1.2, 1.2, 2); warmGlow.position.set(1.5, 1.2, -.05); scene.add(warmGlow);
+facing("nikuman", 1.5, .98, -.08, 2, .16, {h:.15});
+
+// a door mat and the umbrella stand by the door
+put(RB(.9, .02, .45, .01), clay(0x4A4E5E, .95), -.2, .12, .3);
+const stand = put(new THREE.CylinderGeometry(.11, .1, .32, 20, 1, true), clay(0x9AA0AA, .4, {side:THREE.DoubleSide}), -2.0, .3, .4);
+const umbrellas = [];
+[0x2B2F5C, 0xE8693B, 0xF1E8D6].forEach((c, i) => { const u = put(new THREE.CylinderGeometry(.018, .012, .55, 8), clay(c, .6), -2.02 + (i-1)*.035, .4, .4 + (i%2)*.03); u.rotation.z = (i-1)*.12; umbrellas.push(u); });
+// ---- outside: vending machine, bins, utility pole and its street light ----
+const vendLight = new THREE.PointLight(0xEEF3FF, 0, 2.2, 2); vendLight.position.set(3.05, .9, 1.25); scene.add(vendLight);
+const pole = put(new THREE.CylinderGeometry(.07, .085, 3.6, 16), clay(0x8C8A86, .9), 3.6, 1.85, 1.55);
+put(RB(.5, .06, .08, .02), clay(0x6E6C68, .9), 3.6, 3.25, 1.55);
+const lampHead = put(RB(.32, .07, .14, .03), clay(0x5A5C62, .6), 3.38, 2.85, 1.55);
+const lampBulb = new THREE.Mesh(new THREE.PlaneGeometry(.26, .09), new THREE.MeshStandardMaterial({emissive:0xFFE2B0, emissiveIntensity:0, color:0x333333})); lampBulb.rotation.x = Math.PI/2; lampBulb.position.set(3.38, 2.81, 1.55); scene.add(lampBulb);
+const streetLight = new THREE.SpotLight(0xFFD9A0, 0, 7, .9, .7, 1.4); streetLight.position.set(3.38, 2.8, 1.55); streetLight.target.position.set(2.8, 0, 1.9); scene.add(streetLight, streetLight.target);
+// sagging wires off into the dark
+const wireMat = new THREE.MeshBasicMaterial({color:0x14151C});
+[[3.25, 3.4, 4.6, 4.3, -3.6], [3.1, 3.0, 3.6, 5.2, 3.6]].forEach(([y, y2, sag, x2, z2]) => {
+  const curve = new THREE.QuadraticBezierCurve3(new THREE.Vector3(3.6, y, 1.55), new THREE.Vector3((3.6 + x2)/2, y - .5, (1.55 + z2)/2), new THREE.Vector3(x2, y2, z2));
+  scene.add(new THREE.Mesh(new THREE.TubeGeometry(curve, 40, .008, 5), wireMat)); });
+
+// ---- light: the shop is always lit; the sky follows Tokyo ----
+const shopLights = [[-1.3, -1.2], [.3, -1.4], [1.4, -.4], [-.8, .1]].map(([x, z]) => { const l = new THREE.PointLight(0xFFF1DC, 5, 4.5, 1.6); l.position.set(x, 1.7, z); scene.add(l); return l; });
+
+// ---- the delivery truck (only appears near 3:00, 11:00 and 19:00 Tokyo) ----
+const truck = new THREE.Group(); scene.add(truck);
+const livery = tex(1024, 400, (g, w, h) => { g.fillStyle = "#F4EEDF"; g.fillRect(0, 0, w, h); g.fillStyle = "#2B2F5C"; g.fillRect(0, h*.62, w, h*.2); g.fillStyle = "#E8693B"; g.fillRect(0, h*.82, w, h*.05);
+  mark(g, 120, h*.34, 60, "#2B2F5C", "#F4EEDF"); g.fillStyle = "#2B2F5C"; font(g, 700, FE, 110); g.textBaseline = "middle"; spaced(g, "YOAKE", 220, h*.36, 16);
+  g.fillStyle = "#F4EEDF"; font(g, 700, FE, 34); spaced(g, "FRESH 3:00 · 11:00 · 19:00", 60, h*.72, 4); });
+const liveryMat = new THREE.MeshStandardMaterial({map:livery, roughness:.7, polygonOffset:true, polygonOffsetFactor:-2});
+const headlight = new THREE.SpotLight(0xFFF3D6, 0, 5, .5, .6, 1); headlight.position.set(1.35, .4, 0); headlight.target.position.set(4, 0, 0); truck.add(headlight, headlight.target);
+truck.position.set(-9, .02, 2.55); truck.visible = false;
+const crates = new THREE.Group(); scene.add(crates);
+[[-.3, 0], [.05, .05], [-.12, .02, .2]].forEach(([x, z, y=0], i) => put(RB(.32, .18, .24, .02), clay([0x7FA05A, 0x2B2F5C, 0x7FA05A][i], .7), x, .2 + y, 1.05 + z, crates));
+crates.visible = false;
+
+// ---- the night cat (asleep by the warm vending machine, after 10 p.m.) ----
+const cat = new THREE.Group(); cat.position.set(2.62, .1, 1.2); scene.add(cat);
+const catBody = new THREE.Group(); cat.add(catBody);
+const catHit = new THREE.Mesh(new THREE.BoxGeometry(.5, .3, .45), new THREE.MeshBasicMaterial({visible:false})); catHit.position.set(0, .12, 0); catHit.userData.pid = "cat"; cat.add(catHit);
+
+// ---- fal-generated clay props: image → hunyuan3d → meshopt. Each is scaled to a real height, sat on the ground and turned to face the right way ----
+const gltf = new GLTFLoader(); gltf.setMeshoptDecoder(MeshoptDecoder);
+function prop(id, height, {x=0, y=0, z=0, rotY=0, parent=scene} = {}){
+  return new Promise(res => gltf.load(`assets/props/${id}.glb`, g => {
+    const o = g.scene; o.traverse(m => { if (m.isMesh){ m.castShadow = m.receiveShadow = true; const M = m.material;
+      M.roughness = .88; M.metalness = 0; M.bumpMap = clayBump; M.bumpScale = 1.4; if (TINT[id]) M.color.set(TINT[id]); M.envMapIntensity = .8; M.needsUpdate = true; } });
+    const b = new THREE.Box3().setFromObject(o), sz = b.getSize(new THREE.Vector3()), c = b.getCenter(new THREE.Vector3());
+    o.position.set(-c.x, -b.min.y, -c.z); const holder = new THREE.Group(), turn = new THREE.Group(); turn.add(o); holder.add(turn);
+    turn.rotation.y = rotY; holder.scale.setScalar(height / sz.y); holder.position.set(x, y, z); parent.add(holder);
+    holder.userData.size = sz.clone().multiplyScalar(height / sz.y); res(holder);
+  }, undefined, () => res(null)));
+}
+const PROPS = Promise.all([
+  prop("vending", 1.4, {x:3.05, y:.1, z:.6, rotY:PROP_ROT.vending}),
+  prop("bins", .42, {x:2.45, y:.1, z:.72, rotY:PROP_ROT.bins}),
+  prop("bike", .78, {x:-3.0, y:.1, z:1.18, rotY:PROP_ROT.bike}),
+  prop("atm", .95, {x:-1.92, y:.11, z:-.05, rotY:PROP_ROT.atm}),
+  prop("coffee", .36, {x:1.95, y:.97, z:-.1, rotY:PROP_ROT.coffee}),
+  prop("cat", .22, {x:0, y:0, z:0, rotY:PROP_ROT.cat, parent:catBody}),
+  prop("truck", .98, {x:0, y:0, z:0, rotY:PROP_ROT.truck, parent:truck}),
+]).then(([vend, bins, bike, atm, coffee, catM, truckM]) => {
+  // the truck model is blank, so our livery goes on the side that faces the street
+  if (truckM){ const s = truckM.userData.size; const side = new THREE.Mesh(new THREE.PlaneGeometry(s.x * .55, s.y * .5), liveryMat); side.position.set(-s.x * .16, s.y * .58, s.z/2 + .01); truck.add(side); }
+  return {vend, bins, bike, atm, coffee, catM, truckM};
+});
+// ---- Blender-baked ambient occlusion: swap each static mesh for its baked twin (same shape, plus a lightmap UV) ----
+// ?ao=0 shows the scene without it, for comparison
+const BAKED = Q.get("ao") === "0" ? Promise.resolve(0) : new Promise(res => {
+  const aoTex = texLoader.load("assets/bake/ao.jpg"); aoTex.channel = 1; aoTex.flipY = false;
+  gltf.load("assets/bake/env.glb", g => { let n = 0;
+    g.scene.traverse(b => { const i = b.isMesh && /^env_(\d+)$/.exec(b.name); if (!i) return; const orig = ENV[+i[1]]; if (!orig) return;
+      const m = new THREE.Mesh(b.geometry, orig.material.clone()); m.material.aoMap = aoTex; m.material.aoMapIntensity = .85;
+      b.updateWorldMatrix(true, false); m.applyMatrix4(b.matrixWorld);
+      m.castShadow = orig.castShadow; m.receiveShadow = true; scene.add(m); orig.visible = false; n++; });
+    res(n); }, undefined, () => res(0));
+});
+// baked ambient occlusion: which static meshes get a lightmap (not glass, glows, or anything live() restyles)
+const bakeable = m => !m.material.transparent && m.material !== glowMat && m.material !== streetMat && !umbrellas.includes(m) && m.visible;
+async function exportForBake(){
+  const P = await PROPS; scene.updateMatrixWorld(true);
+  const out = new THREE.Scene(), plain = new THREE.MeshStandardMaterial({color:0xffffff});
+  ENV.forEach((m, i) => { if (!bakeable(m)) return; const g = m.geometry.clone(); g.applyMatrix4(m.matrixWorld); const e = new THREE.Mesh(g, plain); e.name = `env_${i}`; out.add(e); });
+  let k = 0; [P.vend, P.bins, P.bike, P.atm, P.coffee].forEach(h => h && h.traverse(m => { if (!m.isMesh) return;
+    const g = m.geometry.clone(); g.applyMatrix4(m.matrixWorld); const e = new THREE.Mesh(g, plain); e.name = `occ_${k++}`; out.add(e); }));
+  const glb = await new GLTFExporter().parseAsync(out, {binary:true});
+  await fetch("http://localhost:8745/upload/bake-in.glb", {method:"POST", body:glb});
+  return {env:out.children.filter(c => c.name.startsWith("env")).length, occ:k};
+}
+
+// ---- rain and snow, only outside the shop ----
+const DROPS = small ? 380 : 700;
+const rain = new THREE.InstancedMesh(new THREE.CylinderGeometry(.004, .004, .2, 3), new THREE.MeshBasicMaterial({color:0xC8D4F0, transparent:true, opacity:.45, depthWrite:false}), DROPS);
+const snow = new THREE.InstancedMesh(new THREE.SphereGeometry(.018, 6, 4), new THREE.MeshBasicMaterial({color:0xffffff, transparent:true, opacity:.9}), DROPS);
+rain.frustumCulled = snow.frustumCulled = false; scene.add(rain, snow);
+const drops = Array.from({length:DROPS}, () => spawnDrop({}, true));
+function spawnDrop(d, any){ do { d.x = (rnd() - .5) * 8; d.z = -2.6 + rnd() * 5.6; } while (d.x > S.x0 - .2 && d.x < S.x1 + .2 && d.z < S.z1 + .25);
+  d.y = any ? rnd() * 4.5 : 4.5; d.s = .8 + rnd() * .4; return d; }
+const dummy = new THREE.Object3D();
+// steam from the bun warmer when it's cold or late
+const steam = Array.from({length:8}, (_, i) => { const m = new THREE.Mesh(new THREE.SphereGeometry(.04, 10, 8), new THREE.MeshBasicMaterial({color:0xffffff, transparent:true, opacity:0, depthWrite:false})); m.userData.t = i/8; scene.add(m); return m; });
+
+// ============ live state: sky, light, stock, truck ============
+const KEY = [[0, 0x231F33], [4.6, 0x231F33], [5.6, 0x8C7DA0], [6.4, 0xE3BFA9], [7.5, 0xDCE3E8], [16.3, 0xDCE3E8], [17.4, 0xE6B08E], [18.4, 0x7A6A92], [19.2, 0x231F33], [24, 0x231F33]];
+const SUNI = [[0, .18], [4.8, .18], [6.5, 1.0], [8, 1.5], [16, 1.5], [17.6, .9], [18.8, .2], [24, .18]];
+const NIGHT = [[0, 1], [4.8, 1], [6.6, 0], [17.4, 0], [19, 1], [24, 1]];
+function keyLerp(K, h){ for (let i = 0; i < K.length - 1; i++){ const [a, va] = K[i], [b, vb] = K[i+1]; if (h >= a && h <= b){ const k = (h - a)/(b - a);
+  return typeof va === "number" && va > 2 ? new THREE.Color(va).lerp(new THREE.Color(vb), k) : va + (vb - va)*k; } } return K[0][1]; }
+const fullness = {};
+let lastTruckState = "";
+function live(t){
+  const h = t.h, night = keyLerp(NIGHT, h);
+  const sky = keyLerp(KEY, h); scene.background.copy(sky); scene.fog.color.copy(sky);
+  if (WX.rain || WX.snow) scene.background.lerp(new THREE.Color(0x4A5060), .25 * (1 - night)), scene.fog.color.copy(scene.background);
+  document.body.style.background = "#" + scene.background.getHexString(); document.body.classList.toggle("day", night < .5);
+  const si = keyLerp(SUNI, h) * (WX.rain || WX.snow ? .55 : WX.code === 3 ? .75 : 1);
+  sun.intensity = si; sun.color.set(night > .5 ? 0xA9B8E8 : h < 9 || h > 15.5 ? 0xFFD2A8 : 0xFFF2E0);
+  const ang = (Math.min(Math.max(h, 6), 18) - 6) / 12 * Math.PI;   // the sun crosses during the day; the moon stays put at night
+  if (night > .5) sun.position.set(-4, 7, 2); else sun.position.set(Math.cos(ang) * -7, 2 + Math.sin(ang) * 6, 3.5);
+  hemi.intensity = .25 + (1 - night) * .45; hemi.color.set(night > .5 ? 0xA9A2C8 : 0xF4EBDC); hemi.groundColor.set(0x6A5A4C);
+  scene.environmentIntensity = .25 + (1 - night) * .3;
+  signMat.emissiveIntensity = .1 + night * .65; glowMat.emissiveIntensity = .65 + night * .3;
+  lampBulb.material.emissiveIntensity = night * 2.5; vendLight.intensity = .2 + night * .9; streetLight.intensity = night * 5;
+  shopLights.forEach(l => l.intensity = 1.3 + night * .6);
+  bloom.strength = .08 + night * .18;
+  // weather
+  const wet = Math.max(WX.rain, WX.snow * .5);
+  streetMat.roughness = .85 - wet * .65; streetMat.color.set(wet ? 0x6E717A : 0x9A9CA4); puddleMat.opacity = wet * .55;
+  rain.visible = WX.rain > 0; snow.visible = WX.snow > 0;
+  umbrellas.forEach((u, i) => u.visible = WX.rain > 0 || i === 0);
+  // the cat sleeps here late at night, but not in the rain
+  cat.visible = (h >= 22 || h < 5) && !WX.rain && !WX.snow;
+  // deliveries: shelves empty out between trucks and refill while the truck is parked
+  const dv = delivery(h), s = sinceLast(h);
+  facings.forEach((f, i) => {
+    const drain = k => Math.max(.12, 1 - k / 8 * f.var * .9);
+    let full = drain(s);
+    if (dv && dv.m < 18) full = dv.m < 0 ? drain(8) : drain(8) + (1 - drain(8)) * (dv.m / 18);
+    const show = Math.max(1, Math.round(f.n * full));
+    f.items.forEach((m, j) => m.visible = j < show);
+  });
+  truck.visible = !!dv; crates.visible = !!dv && dv.m > 1 && dv.m < 17;
+  if (dv){ const m = dv.m, e = x => 1 - Math.pow(1 - x, 3);
+    truck.position.x = m < 0 ? -9 + 9 * e((m + 6)/6) : m <= 18 ? 0 : 9 * Math.pow((m - 18)/6, 2);
+    headlight.intensity = night * 3; }
+  const state = dv ? (dv.m < 0 ? "arriving" : dv.m <= 18 ? "here" : "leaving") : "";
+  if (state === "arriving" && lastTruckState === "") play("truck");
+  if (state === "here" && lastTruckState === "arriving") toast("The truck is here. Restocking the shelves.");
+  lastTruckState = state;
+  // header and footer text
+  const temp = WX.temp !== null ? ` · ${WX.temp}°C` : "", cond = WX.label ? ` · ${WX.label}` : "";
+  $("live").innerHTML = `<b>${clock12(t.H, t.M)}</b> in Kōenji, Tokyo${temp}${cond}`;
+  const nd = nextDelivery(h);
+  $("truck").textContent = dv ? (state === "arriving" ? "Delivery truck pulling up" : state === "here" ? "Delivery truck here · restocking" : "Delivery done · shelves full")
+    : `Next delivery ${clock12(nd.at, 0)} Tokyo · in ${Math.floor(nd.in)}h ${Math.round((nd.in % 1) * 60)}m`;
+  return {night};
+}
+
+// ============ product card: the same clay model, turning slowly ============
+const cv = {renderer:null, scene:null, cam:null, obj:null, id:null, fit:false};
+function cardView(id){
+  if (!cv.renderer){
+    cv.renderer = new THREE.WebGLRenderer({canvas:$("c-cv"), antialias:true, alpha:true}); cv.renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+    cv.renderer.toneMapping = THREE.ACESFilmicToneMapping; cv.renderer.toneMappingExposure = 1.15;
+    cv.scene = new THREE.Scene(); cv.scene.environment = scene.environment; cv.scene.environmentIntensity = .8;
+    cv.scene.add(new THREE.HemisphereLight(0xffffff, 0xA9A49A, 1.3)); const k = new THREE.DirectionalLight(0xfff6ea, 1.8); k.position.set(-2, 3, 2.5); cv.scene.add(k);
+    const sh = new THREE.Mesh(new THREE.CircleGeometry(.5, 48), new THREE.MeshBasicMaterial({color:0, transparent:true, opacity:.08})); sh.rotation.x = -Math.PI/2; sh.scale.set(1, .6, 1); cv.scene.add(sh);
+    cv.cam = new THREE.PerspectiveCamera(28, 1, .01, 20);
+  }
+  if (cv.id === id) return;
+  if (id === "cat" && !catBody.children.length){ PROPS.then(() => { if (current === "cat") cardView("cat"); }); return; }   // wait for the clay cat to load
+  if (cv.obj) cv.scene.remove(cv.obj);
+  const o = id === "cat" ? cat.clone(true) : build(byId[id]); o.position.set(0, 0, 0); o.visible = true; o.traverse(m => m.visible = !(m.material && m.material.visible === false));
+  const b = new THREE.Box3().setFromObject(o), sz = b.getSize(new THREE.Vector3());
+  const holder = new THREE.Group(); holder.add(o); holder.scale.setScalar(1 / Math.max(sz.x, sz.y, sz.z));
+  cv.obj = holder; cv.id = id; cv.scene.add(holder); cv.fit = true;
+}
+function cardTick(T){
+  if (!cv.obj || !$("card").classList.contains("open")) return;
+  const c = cv.renderer.domElement, w = c.clientWidth, h = c.clientHeight;
+  if (c.width !== Math.floor(w * cv.renderer.getPixelRatio())){ cv.renderer.setSize(w, h, false); cv.cam.aspect = w/h; cv.cam.updateProjectionMatrix(); cv.fit = true; }
+  cv.obj.rotation.y = -.35 + Math.sin(T * .5) * .5;
+  if (cv.fit){ cv.fit = false; const b = new THREE.Box3().setFromObject(cv.obj), sz = b.getSize(new THREE.Vector3()), ctr = b.getCenter(new THREE.Vector3());
+    const vf = THREE.MathUtils.degToRad(cv.cam.fov)/2, hf = Math.atan(Math.tan(vf) * cv.cam.aspect);
+    const d = Math.max(Math.max(sz.x, sz.z)*.6 / Math.tan(hf), (sz.y*.5 + .15) / Math.tan(vf)) * 1.15 + .3;
+    cv.cam.position.copy(ctr).addScaledVector(new THREE.Vector3(0, .32, 1).normalize(), d); cv.cam.lookAt(ctr); }
+  cv.renderer.render(cv.scene, cv.cam);
+}
+
+// ============ basket and receipt ============
+const basket = [];
+const yen = n => "¥" + n.toLocaleString("en-US");
+const taxed = sub => sub + Math.floor(sub * .08);          // 8% reduced rate: food and drink to go
+let current = null;
+function openCard(id){
+  const p = byId[id]; current = id; $("basket").classList.remove("open");
+  $("c-name").textContent = p.name; $("c-jp").textContent = p.jp; $("c-price").textContent = p.price ? `${yen(p.price)} + tax` : "";
+  $("c-text").textContent = p.text;
+  $("c-tag").innerHTML = (p.limited ? `<span class="lim">Limited · ${seasonOf(T0.mo)}</span>` : "") + (p.size ? `<span>${p.size}</span>` : "") + `<span>${id === "cat" ? "Lives here" : "Fictional brand · Real konbini food"}</span>`;
+  $("add").hidden = id === "cat"; updateInb(); cardView(id); $("card").classList.add("open");
+}
+function updateInb(){ const n = basket.filter(b => b === current).length; $("c-inb").textContent = n ? `${n} in basket` : ""; }
+function closeCard(){ $("card").classList.remove("open"); unfocus(); }
+$("cardX").onclick = closeCard;
+$("add").onclick = () => { basket.push(current); beep(); renderBasket(); updateInb(); toast(`${byId[current].name} · ${yen(byId[current].price)}`); };
+function renderBasket(){
+  const counts = {}; basket.forEach(id => counts[id] = (counts[id] || 0) + 1);
+  $("b-list").innerHTML = Object.entries(counts).map(([id, n]) => `<li><span>${byId[id].name}<span class="jp">${byId[id].jp}</span></span><span>${n > 1 ? n + " × " : ""}${yen(byId[id].price)}</span><button data-id="${id}" aria-label="Remove one ${byId[id].name}">−</button></li>`).join("");
+  $("b-list").querySelectorAll("button").forEach(b => b.onclick = () => { basket.splice(basket.indexOf(b.dataset.id), 1); renderBasket(); updateInb(); });
+  const sub = basket.reduce((s, id) => s + byId[id].price, 0);
+  $("b-sum").textContent = yen(taxed(sub)); $("bcount").textContent = basket.length; $("b-empty").hidden = basket.length > 0; $("checkout").disabled = !basket.length;
+  regScreen.userData.canvas.getContext("2d").clearRect(0, 0, 128, 64);
+  const g = regScreen.userData.canvas.getContext("2d"); g.fillStyle = "#0E2B22"; g.fillRect(0, 0, 128, 64); g.fillStyle = "#7CF2B5"; font(g, 700, FE, 26); g.textAlign = "center"; g.textBaseline = "middle"; g.fillText(yen(taxed(sub)), 64, 32); regScreen.needsUpdate = true;
+}
+renderBasket();
+$("basketBtn").onclick = () => { closeCard(); $("basket").classList.toggle("open"); };
+$("basketX").onclick = $("keep").onclick = () => $("basket").classList.remove("open");
+function visits(){ try { const n = +(localStorage.getItem("yoake-visits") || 0) + 1; localStorage.setItem("yoake-visits", n); return n; } catch(e){ return 1; } }
+$("checkout").onclick = () => {
+  const t = tokyo(), url = receipt(t); $("r-img").src = url; $("r-save").href = url;
+  $("r-save").download = `yoake-receipt-${String(t.H).padStart(2, "0")}${String(t.M).padStart(2, "0")}.png`;
+  $("basket").classList.remove("open"); $("receipt").classList.add("open"); printer();
+  basket.length = 0; renderBasket();
+};
+$("r-close").onclick = () => $("receipt").classList.remove("open");
+function receipt(t){
+  const counts = {}; basket.forEach(id => counts[id] = (counts[id] || 0) + 1);
+  const lines = Object.entries(counts), W = 640, H = 760 + lines.length * 44, c = document.createElement("canvas"); c.width = W; c.height = H;
+  const g = c.getContext("2d"), ink = "#23242E", L = 56, R = W - 56; let y = 0;
+  g.fillStyle = "#FBFAF6"; g.fillRect(0, 0, W, H);
+  g.fillStyle = "#FBFAF6"; for (let x = 0; x < W; x += 20){ g.beginPath(); g.moveTo(x, H); g.lineTo(x + 10, H - 10); g.lineTo(x + 20, H); g.fill(); }
+  mark(g, W/2, 74, 30, ink, "#FBFAF6");
+  g.fillStyle = ink; g.textAlign = "center"; font(g, 700, FE, 44); spaced(g, "YOAKE", W/2, 160, 10);
+  font(g, 400, FJ, 22); g.fillText("夜明け 高円寺二丁目店", W/2, 198); font(g, 400, FE, 18); g.fillStyle = "#6A6C7A"; g.fillText("Open until dawn · A fictional store", W/2, 226);
+  const dash = yy => { g.strokeStyle = "#B9B6AC"; g.setLineDash([6, 6]); g.lineWidth = 2; g.beginPath(); g.moveTo(L, yy); g.lineTo(R, yy); g.stroke(); g.setLineDash([]); };
+  g.fillStyle = ink; g.textAlign = "left"; font(g, 400, FE, 20);
+  const visit = visits();
+  g.fillText(`${t.y}-${String(t.mo).padStart(2, "0")}-${String(t.d).padStart(2, "0")} (${t.wd})  ${clock12(t.H, t.M)} Tokyo`, L, 276);
+  g.textAlign = "right"; g.fillText(`Visit No. ${visit}`, R, 276); dash(300); y = 346;
+  lines.forEach(([id, n]) => { const p = byId[id]; g.textAlign = "left"; font(g, 400, FE, 22); g.fillText(p.name, L, y); const nw = g.measureText(p.name).width;
+    font(g, 400, FJ, 18); g.fillStyle = "#8A8C9A"; g.fillText(p.jp, L + nw + 10, y); g.fillStyle = ink;
+    g.textAlign = "right"; font(g, 400, FE, 22); g.fillText(`${n > 1 ? n + " × " : ""}${yen(p.price)}`, R, y); y += 44; });
+  const sub = basket.reduce((s, id) => s + byId[id].price, 0), tax = Math.floor(sub * .08);
+  dash(y - 18); y += 24;
+  [["Subtotal", yen(sub)], ["Tax 8% (food to go)", yen(tax)]].forEach(([a, b]) => { g.textAlign = "left"; font(g, 400, FE, 20); g.fillText(a, L, y); g.textAlign = "right"; g.fillText(b, R, y); y += 34; });
+  g.textAlign = "left"; font(g, 700, FE, 30); g.fillText("Total", L, y + 12); g.textAlign = "right"; g.fillText(yen(sub + tax), R, y + 12); y += 54; dash(y); y += 44;
+  g.textAlign = "left"; font(g, 400, FE, 19); g.fillStyle = "#4A4C5E";
+  const sinceD = DELIV.reduce((best, D) => (((t.h - D) % 24 + 24) % 24 < (((t.h - best) % 24 + 24) % 24) ? D : best), DELIV[0]);
+  [`Tokyo right now: ${WX.temp !== null ? WX.temp + "°C" : "—"}${WX.label ? ", " + WX.label.toLowerCase() : ""}`, `Last delivery: ${clock12(sinceD, 0)}`, `Season: ${seasonOf(t.mo)}`].forEach(s => { g.fillText(s, L, y); y += 30; });
+  y += 20; g.textAlign = "center"; g.fillStyle = ink; font(g, 700, FE, 22); g.fillText(t.H < 5 ? "Thank you. See you before dawn." : "Thank you. Come back after dark.", W/2, y);
+  font(g, 400, FJ, 18); g.fillStyle = "#6A6C7A"; g.fillText("またのご来店をお待ちしております", W/2, y + 32);
+  barcode(g, W/2 - 150, y + 66, 300, 70, ink);
+  return c.toDataURL("image/png");
+}
+
+// ============ input ============
+let toastT; function toast(msg){ const t = $("toast"); t.textContent = msg; t.classList.add("show"); clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove("show"), 2400); }
+const ray = new THREE.Raycaster(), ndc = new THREE.Vector2(); let downAt = null;
+if (small) hits.forEach(h => h.scale.set(1.2, 1.3, 1.6));
+const pickables = () => hits.concat(cat.visible ? [catHit] : []);
+canvas.addEventListener("pointerdown", e => { downAt = [e.clientX, e.clientY]; canvas.classList.add("drag"); controls.autoRotate = false; });
+canvas.addEventListener("pointerup", e => { canvas.classList.remove("drag"); if (!downAt) return;
+  const moved = Math.hypot(e.clientX - downAt[0], e.clientY - downAt[1]); downAt = null; if (moved > (e.pointerType === "touch" ? 14 : 6)) return; tap(e.clientX, e.clientY); });
+canvas.addEventListener("pointermove", e => { if (downAt) return; setNdc(e.clientX, e.clientY); ray.setFromCamera(ndc, camera); canvas.classList.toggle("hot", ray.intersectObjects(pickables(), false).length > 0); });
+function setNdc(x, y){ ndc.set(x/innerWidth*2 - 1, -(y/innerHeight)*2 + 1); }
+function tap(x, y){
+  setNdc(x, y); ray.setFromCamera(ndc, camera);
+  let best = null, bd = 1e9;
+  for (const h of ray.intersectObjects(pickables(), false)){ const v = h.object.getWorldPosition(new THREE.Vector3()).project(camera);
+    const d = Math.hypot((v.x*.5 + .5)*innerWidth - x, (-v.y*.5 + .5)*innerHeight - y); if (d < bd){ bd = d; best = h.object; } }
+  if (!best){ closeCard(); return; }
+  openCard(best.userData.pid); tick(); focusOn(best.getWorldPosition(new THREE.Vector3()));
+}
+const focus = {on:false, k:0, target:new THREE.Vector3(), home:new THREE.Vector3(), homeDist:0};
+function focusOn(p){ if (!focus.on){ focus.home.copy(controls.target); focus.homeDist = camera.position.distanceTo(controls.target); } focus.on = true; focus.target.copy(p); controls.autoRotate = false; }
+function unfocus(){ focus.on = false; }
+addEventListener("keydown", e => { if (e.key === "Escape"){ closeCard(); $("basket").classList.remove("open"); $("receipt").classList.remove("open"); } });
+
+// ============ sound: fridge hum, rain, the door chime, the register ============
+let actx, master, soundOn = true, rainGain, streetGain;
+const snd = {}; ["room", "street", "rain", "truck", "chime"].forEach(k => { const a = new Audio(`assets/sound/${k}.m4a`); a.preload = "auto"; a.loop = ["room", "street", "rain"].includes(k); snd[k] = a; });
+function audio(){
+  if (actx) return; actx = new (window.AudioContext || window.webkitAudioContext)(); master = actx.createGain(); master.gain.value = 0; master.connect(actx.destination);
+  const lane = (k, v) => { const g = actx.createGain(); g.gain.value = v; actx.createMediaElementSource(snd[k]).connect(g).connect(master); return g; };
+  lane("room", .55); streetGain = lane("street", .3); rainGain = lane("rain", WX.rain ? .7 * WX.rain : 0); lane("truck", .8); lane("chime", .5);
+  ["room", "street", "rain"].forEach(k => snd[k].play().catch(() => {}));
+}
+function play(k){ if (!actx || !soundOn) return; snd[k].currentTime = 0; snd[k].play().catch(() => {}); }
+function setSound(on){ audio(); soundOn = on; $("sound").textContent = innerWidth < 600 ? (on ? "Sound" : "Muted") : (on ? "Sound on" : "Sound off"); $("sound").setAttribute("aria-pressed", on);
+  actx.resume(); master.gain.setTargetAtTime(on ? .8 : 0, actx.currentTime, .4); }
+$("sound").onclick = () => setSound(!soundOn);
+function tone(f, t0, dur, type="sine", vol=.12){ if (!actx || !soundOn) return; const o = actx.createOscillator(), g = actx.createGain(); o.type = type; o.frequency.value = f;
+  g.gain.setValueAtTime(.0001, t0); g.gain.exponentialRampToValueAtTime(vol, t0 + .02); g.gain.exponentialRampToValueAtTime(.0001, t0 + dur); o.connect(g).connect(master); o.start(t0); o.stop(t0 + dur + .05); }
+function chime(){ play("chime"); }
+function tick(){ if (!actx) return; tone(1500, actx.currentTime, .06, "sine", .05); }
+function beep(){ if (!actx) return; tone(1850, actx.currentTime, .09, "square", .03); }
+function printer(){ if (!actx) return; for (let i = 0; i < 14; i++) tone(320 + (i % 3) * 40, actx.currentTime + i * .07, .05, "sawtooth", .015); }
+
+// ============ enter ============
+const homeEl = $("home");
+{ const g = $("homeMark").getContext("2d"); mark(g, 64, 64, 54, "#F4EEDF", "#1D2238"); }
+function enter(){ homeEl.classList.add("gone"); setTimeout(() => homeEl.remove(), 1100); setSound(true); chime(); }
+homeEl.onclick = enter; homeEl.onkeydown = e => { if (e.key === "Enter" || e.key === " "){ e.preventDefault(); enter(); } };
+
+// ============ post: soft contact shadows, glow, miniature focus, grain ============
+const composer = new EffectComposer(renderer);
+composer.addPass(new RenderPass(scene, camera));
+if (!small){ const ao = new GTAOPass(scene, camera, innerWidth, innerHeight); ao.blendIntensity = .8;
+  ao.updateGtaoMaterial({radius:.3, distanceExponent:1.4, thickness:1.2, scale:1, samples:12}); ao.updatePdMaterial({lumaPhi:10, depthPhi:2, normalPhi:3, radius:6, rings:2, samples:16}); composer.addPass(ao); }
+const bloom = new UnrealBloomPass(new THREE.Vector2(innerWidth, innerHeight), .3, .35, 1.25); composer.addPass(bloom);
+const tiltH = new ShaderPass(HorizontalTiltShiftShader), tiltV = new ShaderPass(VerticalTiltShiftShader);
+tiltH.uniforms.r.value = tiltV.uniforms.r.value = .5; composer.addPass(tiltH); composer.addPass(tiltV);
+composer.addPass(new OutputPass());
+const grain = new ShaderPass({uniforms:{tDiffuse:{value:null}, uTime:{value:0}},
+  vertexShader:"varying vec2 vUv; void main(){ vUv=uv; gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.); }",
+  fragmentShader:`uniform sampler2D tDiffuse; uniform float uTime; varying vec2 vUv;
+    float h(vec2 p){ return fract(sin(dot(p, vec2(12.9898,78.233)))*43758.5453); }
+    void main(){ vec3 c = texture2D(tDiffuse, vUv).rgb; c += (h(vUv*vec2(1280.,720.) + fract(uTime)*100.) - .5) * .016;
+      float v = smoothstep(1.15, .35, length(vUv - .5)*1.35); c *= mix(.86, 1., v); gl_FragColor = vec4(c, 1.); }`});
+composer.addPass(grain);
+function resize(){ const w = innerWidth, h = innerHeight; renderer.setSize(w, h, false); composer.setSize(w, h); camera.aspect = w/h;
+  camera.fov = w/h < .8 ? 40 : 32; camera.updateProjectionMatrix();
+  const want = w/h < .8 ? 15 : 9.4; scene.fog.near = want + 2; scene.fog.far = want + 16; controls.maxDistance = want + 2; controls.minDistance = Math.min(5, want - 4);
+  const dir = camera.position.clone().sub(controls.target).normalize(); camera.position.copy(controls.target).addScaledVector(dir, want);
+  const blur = small ? .5 : .8; tiltH.uniforms.h.value = blur / w; tiltV.uniforms.v.value = blur / h; }
+addEventListener("resize", resize); resize();
+
+// ============ go ============
+const homeLine = () => $("homeTime") && ($("homeTime").textContent = `It's ${clock12(T0.H, T0.M)} in Tokyo${WX.label ? " · " + WX.label.toLowerCase() : ""}.`);
+homeLine(); weather().then(homeLine); setInterval(weather, 15 * 60 * 1000);
+let state = live(tokyo()); let liveAt = 0;
+// the whole scene as it looks right now, plus the camera, for a Blender hero render
+async function exportHero(){
+  await PROPS; await BAKED; scene.updateMatrixWorld(true);
+  const hide = [...hits, catHit, rain, snow, ...steam].filter(o => o.visible); hide.forEach(o => o.visible = false);
+  const cam = camera.clone(); cam.name = "hero_cam"; scene.add(cam);
+  const glb = await new GLTFExporter().parseAsync(scene, {binary:true, onlyVisible:true, maxTextureSize:2048});
+  scene.remove(cam); hide.forEach(o => o.visible = true);
+  await fetch("http://localhost:8745/upload/hero-in.glb", {method:"POST", body:glb});
+  return {bytes:glb.byteLength, sky:"#" + scene.background.getHexString()};
+}
+window.__konbini = {exportHero, BAKED, exportForBake, ENV, PROPS, openCard, live, tokyo, facings, truck, WX, camera, controls, basket, receipt, PRODUCTS};   // test hook
+// capture / embed modes: ?shot skips the intro; &card=<id> opens a card; ?embed hides the credit line
+if (Q.has("shot") || Q.has("embed")){ homeEl.remove(); controls.autoRotate = Q.has("embed"); }
+if (Q.has("card")) openCard(Q.get("card"));
+if (Q.has("embed")) document.body.classList.add("embed");
+const clock = new THREE.Clock();
+renderer.setAnimationLoop(() => {
+  const dt = Math.min(clock.getDelta(), .05), T = clock.elapsedTime;
+  if (T - liveAt > 1){ liveAt = T; state = live(tokyo()); if (rainGain){ rainGain.gain.setTargetAtTime(WX.rain ? .7 * WX.rain : 0, actx.currentTime, 1); streetGain.gain.setTargetAtTime(.15 + state.night * .3, actx.currentTime, 2); } }
+  // rain and snow
+  if (rain.visible || snow.visible){ const isRain = rain.visible, M = isRain ? rain : snow;
+    drops.forEach((d, i) => { d.y -= dt * (isRain ? 7 : .7) * d.s; if (!isRain){ d.x += Math.sin(T*.7 + i) * dt * .1; }
+      if (d.y < .05) spawnDrop(d); dummy.position.set(d.x, d.y, d.z); dummy.rotation.set(isRain ? .08 : 0, 0, 0); dummy.updateMatrix(); M.setMatrixAt(i, dummy.matrix); });
+    M.instanceMatrix.needsUpdate = true; }
+  // steam over the bun warmer when it's cold or late
+  const steamy = (WX.temp !== null && WX.temp < 18) || state.night > .5;
+  steam.forEach(m => { m.userData.t = (m.userData.t + dt * .25) % 1; const k = m.userData.t; m.position.set(1.5 + Math.sin(k*6 + m.id)*.05, 1.3 + k*.5, -.08); m.scale.setScalar(.6 + k*1.6); m.material.opacity = steamy ? Math.sin(k*Math.PI)*.18 : 0; });
+  // the cat breathes
+  if (cat.visible) catBody.scale.y = 1 + Math.sin(T*1.6)*.025;
+  // glide toward the thing you tapped
+  focus.k += ((focus.on ? 1 : 0) - focus.k) * .06;
+  if (focus.k > .001){ const phone = innerWidth < 600, tgt = focus.on ? focus.target.clone() : focus.home.clone();
+    if (focus.on){ if (phone) tgt.y -= .7; else tgt.x += .5; }
+    controls.target.lerp(tgt, .06);
+    const want = focus.on ? focus.homeDist * (phone ? .6 : .62) : focus.homeDist;
+    const dir = camera.position.clone().sub(controls.target), d = dir.length(); dir.setLength(d + (want - d) * .06); camera.position.copy(controls.target).add(dir); }
+  cardTick(T); controls.update(); grain.uniforms.uTime.value = T; composer.render();
+});
+</script>
+</body>
+</html>
