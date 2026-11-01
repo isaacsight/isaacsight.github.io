@@ -1,0 +1,470 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>SOLA — Los Angeles coast, live</title>
+<meta name="description" content="SOLA is a fictional sunscreen brand whose home is a live, risograph-printed map of the sun on the Los Angeles coast: real UV, sunrise, sunset and sea temperature, updated through the day.">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,500..900&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#f5f0e4; --blue:#2f6db5; --pink:#ff4fa3; --yellow:#ffe14a; --navy:#1f2a5c;
+  --mis:3px;            /* how far the inks drift out of register */
+  --gut:clamp(16px,2.4vw,40px);
+}
+*{box-sizing:border-box;margin:0}
+html,body{height:100%}
+body{background:var(--paper);color:var(--navy);font-family:Archivo,system-ui,sans-serif;font-stretch:78%;font-weight:800;overflow-x:hidden;-webkit-font-smoothing:antialiased}
+button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
+
+/* the sheet: three columns, map row then sun-path row */
+.sheet{position:relative;min-height:100vh;padding:var(--gut);display:grid;gap:clamp(12px,1.6vw,26px);
+  grid-template-columns:minmax(260px,.29fr) 1fr minmax(150px,.14fr);grid-template-rows:1fr auto;max-width:1800px;margin:0 auto}
+.reg{position:absolute;width:22px;height:22px;opacity:.55}
+.reg::before,.reg::after{content:"";position:absolute;background:var(--navy)}
+.reg::before{left:50%;top:0;bottom:0;width:1px}.reg::after{top:50%;left:0;right:0;height:1px}
+.reg i{position:absolute;inset:5px;border:1px solid var(--navy);border-radius:50%}
+.reg.tl{left:6px;top:6px}.reg.tr{right:6px;top:6px}.reg.bl{left:6px;bottom:6px}.reg.br{right:6px;bottom:6px}
+
+/* inks: a second offset layer underneath gives the misregistered riso edge */
+.ink{position:relative;display:inline-block;white-space:nowrap}
+.ink .under{position:absolute;left:var(--mis);top:calc(var(--mis)*.6);color:var(--yellow);z-index:0}
+.ink .over{position:relative;z-index:1;mix-blend-mode:multiply}
+.speck{-webkit-mask-image:var(--speck);mask-image:var(--speck);-webkit-mask-size:220px;mask-size:220px}
+
+/* left column */
+.left{display:flex;flex-direction:column;justify-content:space-between;min-width:0}
+.mark{font-size:clamp(64px,8.6vw,150px);line-height:.82;color:var(--blue);letter-spacing:-.01em;font-weight:900;font-stretch:72%}
+.where{margin-top:.5em;font-size:clamp(16px,1.55vw,26px);font-weight:700;font-stretch:85%;color:var(--blue)}
+.where b{color:var(--pink);font-weight:800}
+.big{font-size:clamp(150px,19vw,330px);line-height:.8;font-weight:900;font-stretch:80%;margin-top:.12em}
+.big .over{color:var(--pink);background:radial-gradient(circle,var(--pink) 58%,transparent 60%) 0 0/9px 9px;-webkit-background-clip:text;background-clip:text}
+.big .over{color:transparent;-webkit-text-fill-color:transparent}
+.big .over{mix-blend-mode:normal}
+.big .solid{position:absolute;inset:0;color:var(--pink);z-index:1;-webkit-mask-image:radial-gradient(120% 90% at 30% 30%,#000 55%,transparent 85%);mask-image:radial-gradient(120% 90% at 30% 30%,#000 55%,transparent 85%)}
+.big .under{left:calc(var(--mis)*2.4);top:calc(var(--mis)*1.4)}
+.label{font-size:clamp(22px,2.35vw,40px);line-height:1;letter-spacing:-.005em;margin-top:.35em;text-transform:uppercase}
+.clock{font-size:clamp(20px,2vw,34px);margin-top:.25em}
+.clock .over{color:var(--navy)}.clock .under{color:var(--yellow)}
+.now-btn{display:none;margin-top:.6em;align-self:flex-start;font-size:14px;font-stretch:90%;text-transform:uppercase;letter-spacing:.06em;color:var(--paper);background:var(--pink);padding:.45em .8em .4em;border-radius:99px}
+.scrubbing .now-btn{display:inline-block}
+
+/* map */
+.mapcol{display:flex;flex-direction:column;gap:10px;min-width:0}
+.bar{display:flex;align-items:center;gap:12px;border:2px solid var(--blue);border-radius:6px;padding:6px 10px;font-size:14px;font-weight:600;font-stretch:90%;color:var(--blue)}
+.bar .burger{width:22px;height:16px;border:2px solid var(--blue);border-radius:3px;background:linear-gradient(var(--blue),var(--blue)) center/12px 2px no-repeat,linear-gradient(var(--blue),var(--blue)) center 3px/12px 2px no-repeat,linear-gradient(var(--blue),var(--blue)) center 9px/12px 2px no-repeat}
+.bar .url{flex:1;display:flex;align-items:center;gap:8px;background:radial-gradient(circle,rgba(255,79,163,.45) 45%,transparent 50%) right/6px 6px;background-repeat:repeat-y;padding-right:30%}
+.bar .dot{width:9px;height:9px;border-radius:50%;background:var(--pink);animation:blink 2.4s infinite}
+.bar .upd{white-space:nowrap;opacity:.8}
+@keyframes blink{50%{opacity:.25}}
+.map{position:relative;border:3px solid var(--blue);flex:1;min-height:300px;width:100%;overflow:hidden;background:var(--blue)}
+.map canvas{position:absolute;inset:0;width:100%;height:100%}
+.beach{position:absolute;transform:translate(-6px,-50%);display:flex;align-items:center;gap:7px;font-size:clamp(12px,1.25vw,21px);line-height:.95;text-transform:uppercase;color:var(--navy);text-align:left;padding:4px 6px 4px 0;white-space:nowrap}
+.beach i{flex:none;width:12px;height:12px;border-radius:50%;background:var(--navy);box-shadow:0 0 0 3px var(--paper)}
+.beach span small{display:block;font-size:.62em;font-weight:700;font-stretch:90%;opacity:0;transition:opacity .2s}
+.beach:hover span small,.beach.on span small{opacity:1}
+.beach.on i{background:var(--pink)}
+.beach.flip{flex-direction:row-reverse;text-align:right;transform:translate(calc(-100% + 6px),-50%);padding:4px 0 4px 6px}
+.path .uv3{position:absolute;left:0;font-size:11px;font-weight:700;font-stretch:90%;letter-spacing:.06em;text-transform:uppercase;opacity:.7}
+.beach:focus-visible{outline:2px dashed var(--pink);outline-offset:3px}
+
+/* sun path */
+.path{grid-column:1/3;position:relative;height:clamp(170px,24vh,260px);touch-action:none;cursor:ew-resize;user-select:none}
+.path svg{position:absolute;left:0;right:0;bottom:30px;width:100%;height:calc(100% - 30px);overflow:visible}
+.path .ends{position:absolute;left:0;right:0;bottom:0;display:flex;justify-content:space-between;align-items:flex-end;font-size:clamp(14px,1.35vw,22px);line-height:1.05;text-transform:uppercase}
+.path .ends .mid{font-size:.9em;letter-spacing:.02em}
+.path .ends small{display:block;font-size:.85em}
+.sola{position:absolute;width:clamp(120px,11.5vw,190px);aspect-ratio:1;transform:translate(-50%,8%);pointer-events:none;transition:left .25s ease-out,bottom .25s ease-out}
+.sola::before{content:"";position:absolute;inset:-4%;border-radius:50%;background:var(--paper)}
+.sola img{position:absolute;inset:0;width:100%;height:100%;opacity:0;transition:opacity .5s}
+.sola img.on{opacity:1}
+.sola .pin{position:absolute;left:50%;bottom:-14%;transform:translateX(-50%);font-size:clamp(14px,1.3vw,21px);white-space:nowrap;color:var(--navy)}
+.sola .pin::before{content:"";display:block;width:12px;height:12px;margin:0 auto 4px;background:var(--navy);border-radius:50% 50% 50% 0;transform:rotate(-45deg)}
+
+/* cards */
+.cards{grid-row:1/3;grid-column:3;display:flex;flex-direction:column;gap:clamp(14px,2vh,26px);justify-content:space-between}
+.card{position:relative;flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:14px 8px;text-transform:uppercase;min-height:150px}
+.card::before,.card::after{content:"";position:absolute;inset:0;border:3px solid var(--blue)}
+.card::after{border-color:var(--pink);transform:translate(var(--mis),calc(var(--mis)*1.3));mix-blend-mode:multiply}
+.card h3{font-size:clamp(24px,2.5vw,44px);line-height:.92;font-weight:900;color:var(--navy)}
+.card .v{font-size:clamp(46px,5.4vw,96px);line-height:.85;color:var(--pink);font-weight:900;margin-top:.08em}
+.card .v sup{font-size:.55em;vertical-align:.32em}
+.card .v small{font-size:.38em;color:var(--navy)}
+.card .v.words{font-size:clamp(26px,2.6vw,46px);line-height:.95}
+.card .s{font-size:clamp(11px,.9vw,14px);font-weight:700;font-stretch:90%;letter-spacing:.03em;margin-top:.55em;opacity:.8}
+.waves{width:70%;height:22px;margin-top:6px}
+.meter{width:60%;height:10px;margin-top:10px;border:2px solid var(--navy);border-radius:5px;overflow:hidden}
+.meter i{display:block;height:100%;background:var(--pink);transition:width .4s}
+
+.card .v{align-self:stretch;white-space:nowrap;overflow:hidden;text-align:center}
+.card .v.words{white-space:normal}
+.path .ends span{transition:opacity .25s}
+.path .ends .hide{opacity:0}
+.hint{position:absolute;left:96%;top:44%;white-space:nowrap;font-size:13px;letter-spacing:.08em;text-transform:uppercase;color:var(--pink);animation:nudge 1.6s ease-in-out infinite}
+.hint::before{content:"← "}.hint::after{content:" →"}
+.dragged .hint,.night .hint{display:none}
+@keyframes nudge{50%{transform:translateX(6px)}}
+.credit{margin-top:-4px;text-align:right;font-size:10px;font-weight:600;font-stretch:90%;color:var(--navy);opacity:.6}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.stars{position:absolute;left:0;right:0;top:0;width:100%;height:calc(100% - 30px);display:none}
+/* night: the same inks on dark stock */
+body{transition:background .6s}
+body.night{--paper:#1b2148;--navy:#f3ecdc;--blue:#5b8fd8}
+body.night .grain{opacity:.3}
+body.night .stars{display:block}
+/* ?shot: stills for the case study, with no transitions caught halfway */
+.shot *,.shot{transition:none!important;animation:none!important}
+
+/* grain over everything */
+.grain{position:fixed;inset:0;pointer-events:none;mix-blend-mode:multiply;opacity:.55;z-index:9;background-size:300px}
+.note{position:fixed;left:50%;bottom:12px;transform:translateX(-50%);background:var(--navy);color:var(--paper);font-size:13px;font-weight:600;padding:.5em .9em;border-radius:6px;z-index:10;display:none}
+
+/* phone and narrow windows: stack, keep the order of the concept */
+@media (max-width:900px){
+  .sheet{grid-template-columns:1fr 1fr 1fr;grid-template-rows:auto;min-height:0}
+  .left{grid-column:1/4;display:grid;grid-template-columns:auto 1fr;column-gap:16px;align-items:end}
+  .left .head{grid-column:1/3}
+  .big{grid-row:2;font-size:clamp(120px,36vw,200px)}
+  .left .read{grid-row:2;padding-bottom:.6em}
+  .label{font-size:clamp(18px,5.4vw,28px)}
+  .mapcol{grid-column:1/4}
+  .map{flex:none;aspect-ratio:1000/720;min-height:0}
+  .path{grid-column:1/4;height:200px}
+  .cards{grid-column:1/4;grid-row:auto;flex-direction:row;gap:12px}
+  .card{min-height:130px;padding:10px 4px}
+  .card h3{font-size:clamp(16px,4.6vw,24px)}
+  .card .v{font-size:clamp(34px,10vw,56px)}
+  .bar .url{padding-right:10%}
+}
+</style>
+</head>
+<body>
+<main class="sheet" id="sheet">
+  <span class="reg tl"><i></i></span><span class="reg tr"><i></i></span><span class="reg bl"><i></i></span><span class="reg br"><i></i></span>
+
+  <section class="left">
+    <div class="head">
+      <h1 class="mark speck">SOLA</h1>
+      <p class="where"><span id="where">Santa Monica</span> · <b>live</b></p>
+    </div>
+    <div class="big ink speck" aria-hidden="true"><span class="under" id="uvU">–</span><span class="over" id="uvO">–</span><span class="solid" id="uvS">–</span></div>
+    <div class="read">
+      <p class="label speck" id="uvLabel">UV index</p>
+      <p class="clock ink"><span class="under" id="clockU">–</span><span class="over" id="clockO">–</span></p>
+      <button class="now-btn" id="nowBtn">Back to now</button>
+    </div>
+  </section>
+
+  <section class="mapcol">
+    <div class="bar"><span class="burger" aria-hidden="true"></span><span class="url"><span class="dot"></span>sola.coast/live</span><span class="upd" id="upd">loading…</span></div>
+    <div class="map" id="map" role="group" aria-label="UV at five Los Angeles beaches"><canvas id="mapC"></canvas></div>
+    <p class="credit">Coast © OpenStreetMap contributors · UV &amp; sea: Open-Meteo</p>
+  </section>
+
+  <section class="path" id="path" aria-label="Today's sun path. Drag to see any time of day." tabindex="0">
+    <svg id="stars" class="stars" viewBox="0 0 1000 200" preserveAspectRatio="xMidYMid slice" aria-hidden="true"></svg>
+    <svg id="hill" viewBox="0 0 1000 200" preserveAspectRatio="none" aria-hidden="true"></svg>
+    <span class="uv3" id="uv3">UV 3 · protect above</span>
+    <div class="sola" id="sola">
+      <img alt="" data-m="sleep" src="img/sola-sleep.png"><img alt="" data-m="dawn" src="img/sola-dawn.png"><img alt="" data-m="mild" src="img/sola-mild.png">
+      <img alt="" data-m="high" src="img/sola-high.png"><img alt="" data-m="extreme" src="img/sola-extreme.png"><img alt="" data-m="dusk" src="img/sola-dusk.png">
+      <span class="hint">drag the sun</span>
+      <span class="pin" id="pin">–</span>
+    </div>
+    <div class="ends"><span id="riseL">Sunrise<small id="rise">–</small></span><span class="mid">Today’s sun path</span><span id="setL" style="text-align:right">Sunset<small id="set">–</small></span></div>
+  </section>
+
+  <aside class="cards">
+    <div class="card"><h3>Sea</h3><p class="v" id="sea">–</p><svg class="waves" viewBox="0 0 120 22" aria-hidden="true"><path d="M2 7q7.5-6 15 0t15 0 15 0 15 0 15 0 15 0 15 0 15 0M2 17q7.5-6 15 0t15 0 15 0 15 0 15 0 15 0 15 0 15 0" fill="none" stroke="#2f6db5" stroke-width="3" stroke-linecap="round"/></svg><p class="s" id="seaS">&nbsp;</p></div>
+    <div class="card"><h3 id="burnH">Burn in</h3><p class="v" id="burn">–</p><div class="meter"><i id="burnM" style="width:0"></i></div><p class="s">fair skin · no sunscreen</p></div>
+    <div class="card"><h3 id="shadeH">Shade until</h3><p class="v" id="shade">–</p><p class="s" id="shadeS">&nbsp;</p></div>
+  </aside>
+</main>
+<div class="grain" id="grain"></div>
+<div class="note" id="note"></div>
+<p class="sr" id="sr" aria-live="polite"></p>
+
+<script src="coast.js"></script>
+<script>
+"use strict";
+const $ = id => document.getElementById(id);
+const q = new URLSearchParams(location.search);
+const TZ = "America/Los_Angeles";
+const INK = {paper:"#f5f0e4", blue:"#2f6db5", pink:"#ff4fa3", yellow:"#ffe14a", navy:"#1f2a5c"};
+
+// five beaches, placed by their real coordinates; data is fetched for each
+const BEACHES = [
+  {id:"malibu",    name:"Malibu",          lat:34.0360, lon:-118.6780, dx: 14, dy:-4},
+  {id:"santamonica",name:"Santa Monica",   lat:34.0080, lon:-118.4990, dx: 14, dy: 0},
+  {id:"venice",    name:"Venice",          lat:33.9850, lon:-118.4730, dx: 14, dy: 6},
+  {id:"manhattan", name:"Manhattan Beach", lat:33.8847, lon:-118.4130, dx: 14, dy: 0},
+  {id:"longbeach", name:"Long Beach",      lat:33.7640, lon:-118.1700, dx: 0,  dy: 0, flip:true},
+];
+if (q.has("shot")) document.body.classList.add("shot");
+let sel = BEACHES.find(b => b.id === q.get("beach")) || BEACHES[1];
+
+// seeded noise so the print texture is the same on every visit
+function rng(seed){ return () => (seed = (seed * 1664525 + 1013904223) >>> 0) / 4294967296; }
+
+// ---------- print texture: paper grain + ink speckle masks ----------
+(function texture(){
+  const r = rng(7), c = document.createElement("canvas"); c.width = c.height = 300; const g = c.getContext("2d");
+  const im = g.createImageData(300, 300);
+  for (let i = 0; i < im.data.length; i += 4){ const v = 225 + r() * 30 - (r() < .012 ? 70 : 0); im.data[i] = v; im.data[i+1] = v * .985; im.data[i+2] = v * .95; im.data[i+3] = 255; }
+  g.putImageData(im, 0, 0);
+  // fibres
+  g.globalAlpha = .08; g.strokeStyle = "#7a6a50";
+  for (let i = 0; i < 90; i++){ const x = r()*300, y = r()*300, a = r()*6.28, l = 6 + r()*20; g.beginPath(); g.moveTo(x, y); g.lineTo(x + Math.cos(a)*l, y + Math.sin(a)*l); g.stroke(); }
+  $("grain").style.backgroundImage = `url(${c.toDataURL()})`;
+  // speckle: ink missing in tiny spots, the way a riso drum drops out
+  const m = document.createElement("canvas"); m.width = m.height = 220; const h = m.getContext("2d");
+  h.fillStyle = "#000"; h.fillRect(0, 0, 220, 220); h.globalCompositeOperation = "destination-out";
+  for (let i = 0; i < 520; i++){ h.globalAlpha = .25 + r()*.75; h.beginPath(); h.arc(r()*220, r()*220, r() < .9 ? .5 + r()*.9 : 1.5 + r()*1.5, 0, 6.3); h.fill(); }
+  document.documentElement.style.setProperty("--speck", `url(${m.toDataURL()})`);
+})();
+
+// ---------- time helpers ----------
+const fmt = new Intl.DateTimeFormat("en-US", {timeZone:TZ, hour:"numeric", minute:"2-digit"});
+const parts = new Intl.DateTimeFormat("en-CA", {timeZone:TZ, year:"numeric", month:"2-digit", day:"2-digit", hour:"2-digit", minute:"2-digit", hourCycle:"h23"});
+function laNow(){ const p = Object.fromEntries(parts.formatToParts(new Date()).map(x => [x.type, x.value])); return {date:`${p.year}-${p.month}-${p.day}`, h:+p.hour + +p.minute/60}; }
+const hhmm = h => { h = ((h % 24) + 24) % 24; const H = Math.floor(h), M = Math.round((h - H) * 60) % 60, HH = Math.floor(h + (Math.round((h-H)*60) === 60 ? 1 : 0)) % 24; return `${HH % 12 || 12}:${String(M).padStart(2,"0")} ${HH < 12 ? "AM" : "PM"}`; };
+const hourLabel = h => { const H = Math.round(h) % 24; return `${H % 12 || 12} ${H < 12 ? "AM" : "PM"}`; };
+const isoH = s => +s.slice(11, 13) + +s.slice(14, 16) / 60;
+
+// ---------- live data (Open-Meteo, no key) ----------
+let DATA = null, override = null;               // override: hours chosen by dragging the sun
+if (q.get("t")){ const [a, b] = q.get("t").split(":"); override = +a + (+b || 0) / 60; }
+
+async function load(){
+  const lat = BEACHES.map(b => b.lat).join(","), lon = BEACHES.map(b => b.lon).join(",");
+  const base = `latitude=${lat}&longitude=${lon}&timezone=${encodeURIComponent(TZ)}&forecast_days=2`;
+  try{
+    const [wx, sea] = await Promise.all([
+      fetch(`https://api.open-meteo.com/v1/forecast?${base}&hourly=uv_index&daily=sunrise,sunset,uv_index_max`).then(r => r.json()),
+      fetch(`https://marine-api.open-meteo.com/v1/marine?${base}&hourly=sea_surface_temperature`).then(r => r.json()).catch(() => null),
+    ]);
+    const today = laNow().date; dataDate = today;
+    DATA = BEACHES.map((b, i) => {
+      const w = wx[i], s = sea && sea[i], t0 = w.hourly.time.indexOf(`${today}T00:00`);
+      const di = w.daily.time.indexOf(today);
+      return {
+        uv: w.hourly.uv_index.slice(t0, t0 + 48).map(v => v ?? 0),
+        sst: s && s.hourly ? s.hourly.sea_surface_temperature.slice(s.hourly.time.indexOf(`${today}T00:00`)) : [],
+        rise: isoH(w.daily.sunrise[di]), set: isoH(w.daily.sunset[di]), riseNext: isoH(w.daily.sunrise[di + 1] || w.daily.sunrise[di]),
+        max: w.daily.uv_index_max[di],
+      };
+    });
+    $("upd").textContent = `updated ${fmt.format(new Date())}`;
+    $("note").style.display = "none";
+    render();
+  } catch(e){
+    $("upd").textContent = "offline";
+    const n = $("note"); n.textContent = "Live sun data is unavailable right now. Trying again shortly."; n.style.display = "block";
+  }
+}
+
+// linear, for series with gaps (sea temperature)
+const lin = (arr, h) => { if (!arr.length) return null; const i = Math.max(0, Math.min(arr.length - 1, Math.floor(h))), j = Math.min(arr.length - 1, i + 1), f = h - Math.floor(h); return arr[i] == null ? arr[j] : arr[j] == null ? arr[i] : arr[i] + (arr[j] - arr[i]) * f; };
+// smooth (Catmull-Rom) through the hourly UV readings, so the hill and the circles curve instead of stepping
+const at = (arr, h) => {
+  if (!arr.length) return null;
+  const n = arr.length - 1, i = Math.max(0, Math.min(n, Math.floor(h))), f = h - Math.floor(h), v = k => arr[Math.max(0, Math.min(n, k))] ?? 0;
+  const p0 = v(i - 1), p1 = v(i), p2 = v(i + 1), p3 = v(i + 2);
+  return Math.max(0, .5 * (2 * p1 + (p2 - p0) * f + (2 * p0 - 5 * p1 + 4 * p2 - p3) * f * f + (3 * p1 - p0 - 3 * p2 + p3) * f * f * f));
+};
+const band = uv => uv < 3 ? "Low" : uv < 6 ? "Moderate" : uv < 8 ? "High" : uv < 11 ? "Very high" : "Extreme";
+
+// ---------- map ----------
+const map = $("map"), cv = $("mapC"), g = cv.getContext("2d");
+const C = window.COAST, [S, W, N, E] = C.frame;
+const proj = (lat, lon) => [(lon - W) / (E - W) * C.w, (N - lat) / (N - S) * C.h];
+const land = new Path2D(C.land), shore = new Path2D(C.shore);
+// snap each beach onto the nearest point of the real shoreline so its dot sits on the sand
+const shorePts = C.shore.slice(1).split("L").map(p => p.split(",").map(Number));
+BEACHES.forEach(b => { const [x, y] = proj(b.lat, b.lon); let best = shorePts[0], d = 1e9; for (const p of shorePts){ const e = (p[0]-x)**2 + (p[1]-y)**2; if (e < d){ d = e; best = p; } } b.x = best[0]; b.y = best[1]; });
+
+BEACHES.forEach(b => {
+  const el = document.createElement("button"); el.className = "beach" + (b.flip ? " flip" : ""); el.id = "b-" + b.id;
+  el.innerHTML = `<i></i><span>${b.name.replace(" ", "<br>")}<small></small></span>`;
+  if (b.name.length < 10) el.querySelector("span").innerHTML = `${b.name}<small></small>`;
+  el.onclick = () => { sel = b; render(); };
+  map.appendChild(el); b.el = el;
+});
+
+// the map is framed on the five beaches (with room for their suns), and always covers its box
+const span = k => [Math.min(...BEACHES.map(b => b[k])), Math.max(...BEACHES.map(b => b[k]))];
+const [xLo, xHi] = span("x"), [yLo, yHi] = span("y");
+let view = {s:1, ox:0, oy:0, w:0, h:0};
+function fit(){
+  const w = cv.clientWidth, h = cv.clientHeight; if (w === view.w && h === view.h) return;
+  const cover = Math.max(w / C.w, h / C.h), frame = Math.min(w / (xHi - xLo + 240), h / (yHi - yLo + 150));
+  const s = Math.max(cover, frame), clamp = (v, lo) => Math.min(0, Math.max(lo, v));
+  view = {s, ox:clamp(w / 2 - (xLo + xHi) / 2 * s, w - C.w * s), oy:clamp(h / 2 - (yLo + yHi) / 2 * s, h - C.h * s), w, h};
+  BEACHES.forEach(b => { b.el.style.left = `${view.ox + b.x * s + b.dx}px`; b.el.style.top = `${view.oy + b.y * s + b.dy}px`; });
+}
+
+let pulse = 0, night = false;
+function drawMap(h){
+  fit();
+  const r = devicePixelRatio || 1;
+  if (cv.width !== Math.round(view.w * r) || cv.height !== Math.round(view.h * r)) { cv.width = Math.round(view.w * r); cv.height = Math.round(view.h * r); }
+  const s = view.s * r, ox = view.ox * r, oy = view.oy * r;
+  g.setTransform(1, 0, 0, 1, 0, 0); g.globalCompositeOperation = "source-over"; g.globalAlpha = 1;
+  g.fillStyle = night ? "#263c80" : INK.blue; g.fillRect(0, 0, cv.width, cv.height);
+  g.setTransform(s, 0, 0, s, ox, oy);
+  // pink drifts out from under the shoreline, then the paper land is laid on top
+  g.save(); g.translate(2.2, -1.6); g.strokeStyle = INK.pink; g.lineWidth = 3.2; g.lineJoin = "round"; g.stroke(shore); g.restore();
+  g.fillStyle = INK.paper; g.fill(land);
+  if (!DATA || h < 0) return;
+  // halftone suns: yellow core and pink halo per beach, sized by that beach's UV now, printed with multiply
+  g.setTransform(1, 0, 0, 1, 0, 0); g.globalCompositeOperation = "multiply";
+  const base = Math.max(5, cv.width / 150), breathe = 1 + Math.sin(pulse) * .03;
+  BEACHES.forEach((b, i) => {
+    const uv = at(DATA[i].uv, h); if (uv < .5) return;     // under half a point there's nothing worth printing
+    const R = (18 + uv * 11) * s * breathe, cx = ox + b.x * s, cy = oy + b.y * s;
+    const step = Math.min(base, R / 4.5);                   // small suns get finer dots, so they stay round
+    halftone(cx, cy, R * 1.32, step, .26, t => t < .62 || t > 1.25 ? 0 : Math.max(0, 1 - Math.abs(t - .95) / .32), INK.pink);
+    g.fillStyle = INK.yellow; g.beginPath(); g.arc(cx, cy, R * .5, 0, 6.2832); g.fill();
+    halftone(cx, cy, R, step * .92, 0, t => t < .45 ? 0 : Math.max(0, 1 - (t - .5) / .5), INK.yellow);
+  });
+  g.globalCompositeOperation = "source-over";
+}
+// dots on a rotated grid; size(t) gives the dot's radius (0..1 of a cell) at distance t = d / R
+function halftone(cx, cy, R, step, ang, size, col){
+  g.fillStyle = col; const ca = Math.cos(ang), sa = Math.sin(ang), n = Math.ceil(R / step) + 1;
+  g.beginPath();
+  for (let i = -n; i <= n; i++) for (let j = -n; j <= n; j++){
+    const x = (i * ca - j * sa) * step, y = (i * sa + j * ca) * step, t = Math.hypot(x, y) / R, k = size(t);
+    if (k <= .04) continue;
+    const rad = step * .5 * Math.min(k, 1.05) * 1.02; g.moveTo(cx + x + rad, cy + y); g.arc(cx + x, cy + y, rad, 0, 6.2832);
+  }
+  g.fill();
+}
+
+// ---------- sun path ----------
+const hill = $("hill"), sola = $("sola"), path = $("path");
+const MAXUV = 11;
+// the hill is scaled to the day (never below UV 6), and the dashed line marks UV 3 so low days still read as low
+const peak = d => Math.max(6, d.max || 0) / .92;
+function curve(d){
+  const pts = [], T = peak(d);
+  for (let k = 0; k <= 120; k++){ const h = d.rise + (d.set - d.rise) * k / 120; pts.push([k / 120 * 1000, 200 - at(d.uv, h) / T * 200]); }
+  return pts;
+}
+function drawHill(d){
+  const pts = curve(d), line = pts.map(p => p.join(",")).join(" L"), y3 = 200 - 3 / peak(d) * 200;
+  hill.innerHTML =
+    `<defs><pattern id="ht" width="7" height="7" patternUnits="userSpaceOnUse" patternTransform="rotate(15)"><circle cx="3.5" cy="3.5" r="2.1" fill="${INK.yellow}"/></pattern></defs>` +
+    `<g opacity="${night ? .5 : 1}"><path d="M0,200 L${line} L1000,200Z" fill="${night ? "none" : "url(#ht)"}" transform="translate(7,-5)" style="mix-blend-mode:${night ? "normal" : "multiply"}"/>` +
+    `<path d="M0,200 L${line} L1000,200Z" fill="${INK.pink}" style="mix-blend-mode:${night ? "normal" : "multiply"}"/></g>` +
+    `<line x1="0" x2="1000" y1="${y3}" y2="${y3}" stroke="${INK.navy}" stroke-width="1.4" stroke-dasharray="4 6" vector-effect="non-scaling-stroke" opacity=".55"/>` +
+    `<line id="nowLine" x1="0" x2="0" y1="0" y2="200" stroke="${INK.navy}" stroke-width="1.6" vector-effect="non-scaling-stroke"/>`;
+  hill._pts = pts;
+  $("uv3").style.top = `calc(${y3 / 200} * (100% - 30px) - 1.3em)`;  // HTML, so the stretched SVG doesn't distort the type
+}
+// halftone stars for the night sky over the path, placed once from a fixed seed
+(function stars(){
+  const r = rng(31); let out = "";
+  for (let i = 0; i < 46; i++){ const x = r() * 1000, y = r() * 150, big = r() < .15;
+    out += big ? `<g transform="translate(${x.toFixed(0)},${y.toFixed(0)})" stroke="${INK.yellow}" stroke-width="2"><line x1="-6" x2="6"/><line y1="-6" y2="6"/></g>` : `<circle cx="${x.toFixed(0)}" cy="${y.toFixed(0)}" r="${(1.2 + r() * 1.6).toFixed(1)}" fill="${r() < .3 ? INK.pink : INK.yellow}"/>`; }
+  $("stars").innerHTML = out;
+})();
+
+// shrink a card's value until it fits inside the card
+function fitText(el){
+  el.style.fontSize = ""; if (el.classList.contains("words")) return;
+  let fs = parseFloat(getComputedStyle(el).fontSize);
+  while (el.scrollWidth > el.clientWidth + 1 && fs > 16){ fs -= 2; el.style.fontSize = fs + "px"; }
+}
+// day and night print on different stock: swap the inks, and the canvas and hill pick them up
+function setNight(on){
+  if (on === night) return; night = on; document.body.classList.toggle("night", on);
+  const cs = getComputedStyle(document.body); for (const k of ["paper","blue","navy"]) INK[k] = cs.getPropertyValue("--" + k).trim();
+  lastHill = ""; view.w = 0;
+}
+
+// ---------- everything for one moment ----------
+let lastHill = "", dataDate = "", dragging = false, said = "";
+function render(){
+  if (!DATA) return;
+  const nowLA = laNow(); if (nowLA.date !== dataDate && override == null) { load(); return; }   // a new day in LA: fetch its sun
+  const i = BEACHES.indexOf(sel), d = DATA[i], h = override ?? nowLA.h;
+  document.body.classList.toggle("scrubbing", override != null && !q.get("t"));
+  // the UV index is reported as a whole number, so every threshold below uses the rounded value
+  const day = h >= d.rise && h <= d.set, U = day ? Math.round(at(d.uv, h)) : 0, uv = U;
+  setNight(!day);
+
+  $("where").textContent = sel.name;
+  for (const k of ["uvU","uvO","uvS"]) $(k).textContent = U;
+  $("uvLabel").textContent = day ? `UV index — ${band(U)}` : "Sun down";
+  for (const k of ["clockU","clockO"]) $(k).textContent = hhmm(h);
+  BEACHES.forEach((b, k) => { b.el.classList.toggle("on", b === sel); b.el.querySelector("small").textContent = `UV ${day ? Math.round(at(DATA[k].uv, h)) : 0}`; });
+
+  // cards
+  const t = lin(d.sst, h) ?? DATA.map(x => lin(x.sst, h)).find(v => v != null);
+  $("sea").innerHTML = t == null ? "–" : `${Math.round(t)}<sup>°C</sup>`;
+  $("seaS").textContent = t == null ? "no reading" : `${Math.round(t * 9 / 5 + 32)}°F · model estimate`;
+  $("shade").classList.remove("words");
+  if (uv >= 1){ const m = Math.round(200 / Math.max(.5, at(d.uv, h)) / 5) * 5; $("burnH").textContent = "Burn in"; $("burn").innerHTML = m < 60 ? `${m}<small>min</small>` : `${(m / 60).toFixed(1).replace(".0", "")}<small>hr</small>`; $("burnM").style.width = `${Math.min(100, uv / MAXUV * 100)}%`; }
+  else { $("burnH").textContent = "Burn risk"; $("burn").innerHTML = "None"; $("burnM").style.width = "0"; }
+  // protection matters at UV 3 and up (WHO): say how long that lasts, or when it starts
+  let hEnd = null, hStart = null;
+  for (let x = h; x <= d.set; x += 1 / 12){ const v = Math.round(at(d.uv, x)); if (v >= 3 && hStart == null) hStart = x; if (hStart != null && v < 3){ hEnd = x; break; } }
+  const small = s => s.replace(" ", "<small>") + "</small>";
+  if (!day){ $("shadeH").textContent = "Sun up at"; $("shade").innerHTML = small(hhmm(h < d.rise ? d.rise : d.riseNext)); $("shadeS").textContent = "UV 0 all night"; }
+  else if (uv >= 3){ $("shadeH").textContent = "Shade until"; $("shade").innerHTML = small(hourLabel(hEnd ?? d.set)); $("shadeS").textContent = "UV 3+ until then"; }
+  else if (hStart != null){ $("shadeH").textContent = "Sun safe until"; $("shade").innerHTML = small(hhmm(hStart)); $("shadeS").textContent = "then UV 3+"; }
+  else { $("shadeH").textContent = "Sun safe"; $("shade").textContent = "Rest of day"; $("shade").classList.add("words"); $("shadeS").textContent = "UV stays under 3"; }
+  ["sea","burn","shade"].forEach(k => fitText($(k)));
+
+  $("rise").textContent = hhmm(d.rise); $("set").textContent = hhmm(d.set);
+  const key = `${i}|${d.rise}|${d.uv.join()}|${night}`; if (key !== lastHill){ drawHill(d); lastHill = key; }
+
+  // Sola rides the curve, kept inside the path; the end labels step aside when it's near them
+  const f = Math.max(0, Math.min(1, (h - d.rise) / (d.set - d.rise))), pts = hill._pts, p = pts[Math.round(f * 120)];
+  const box = hill.getBoundingClientRect(), pb = path.getBoundingClientRect(), half = sola.offsetWidth / 2;
+  const x = Math.max(half * .85, Math.min(box.width - half * .85, p[0] / 1000 * box.width));
+  sola.style.left = `${x}px`;
+  sola.style.bottom = `${pb.bottom - box.top - p[1] / 200 * box.height}px`;
+  $("riseL").classList.toggle("hide", x < half * 2.4); $("setL").classList.toggle("hide", x > box.width - half * 2.4);
+  $("nowLine").setAttribute("x1", p[0]); $("nowLine").setAttribute("x2", p[0]); $("nowLine").setAttribute("y1", p[1]);
+  $("nowLine").style.display = day ? "" : "none";
+  const mood = !day ? "sleep" : h < d.rise + .75 ? "dawn" : h > d.set - .75 ? "dusk" : uv < 3 ? "mild" : uv < 8 ? "high" : "extreme";
+  sola.querySelectorAll("img").forEach(im => im.classList.toggle("on", im.dataset.m === mood));
+  $("pin").textContent = day ? hhmm(h) : "asleep";
+  drawMap(day ? h : -1);
+  render.h = day ? h : -1;
+
+  // screen readers hear the reading when it changes, not on every frame of a drag
+  const msg = `${sel.name}: ${day ? `UV ${U}, ${band(U).toLowerCase()}` : "sun down"}, ${hhmm(h)}.`;
+  if (!dragging && msg.replace(/, [^,]*\.$/, "") !== said){ said = msg.replace(/, [^,]*\.$/, ""); $("sr").textContent = msg; }
+}
+
+// drag along the path to read any moment of today
+function scrub(e){
+  if (!DATA) return;
+  const d = DATA[BEACHES.indexOf(sel)], b = hill.getBoundingClientRect();
+  const f = Math.max(0, Math.min(1, (e.clientX - b.left) / b.width));
+  override = d.rise + (d.set - d.rise) * f; render();
+}
+function used(){ document.body.classList.add("dragged"); try{ localStorage.setItem("sola-dragged", "1"); }catch(e){} }
+try{ if (localStorage.getItem("sola-dragged")) document.body.classList.add("dragged"); }catch(e){}
+path.addEventListener("pointerdown", e => { dragging = true; used(); path.setPointerCapture(e.pointerId); scrub(e); path.onpointermove = scrub; });
+path.addEventListener("pointerup", () => { dragging = false; path.onpointermove = null; render(); });
+path.addEventListener("keydown", e => {
+  if (!DATA || !/Arrow(Left|Right)/.test(e.key)) return;
+  used(); const d = DATA[BEACHES.indexOf(sel)]; override = Math.max(d.rise, Math.min(d.set, (override ?? laNow().h) + (e.key === "ArrowRight" ? .25 : -.25))); render(); e.preventDefault();
+});
+$("nowBtn").onclick = () => { override = null; render(); };
+
+addEventListener("resize", () => { view.w = 0; lastHill = ""; render(); if (!DATA) drawMap(-1); });
+drawMap(-1); load();
+setInterval(render, 30000);                       // the clock and the sun move on their own
+setInterval(load, 15 * 60000);                    // fresh readings every quarter hour
+// the suns breathe at about 12 frames a second: enough to feel alive, light on a phone's battery
+let lastFrame = 0;
+(function breathe(t){ if (t - lastFrame > 80){ lastFrame = t; pulse += .1; if (DATA && render.h >= 0 && !q.has("shot")) drawMap(render.h); } requestAnimationFrame(breathe); })(0);
+</script>
+</body>
+</html>
