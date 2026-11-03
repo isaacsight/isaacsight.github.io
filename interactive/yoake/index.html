@@ -401,7 +401,7 @@ function build(p){
 // which way each generated model needs turning so its front faces the street (+z); the truck faces +x, the way it drives
 // a multiply over each generated texture, pulling white plastic to cream and the mint bike to our matcha
 const TINT = {vending:0xF6EAD2, truck:0xF6EAD2, atm:0xF3E6CF, bike:0xB9B49A, bins:0xF0E2C8, coffee:0xEBDDC6, cat:0xE8DCCB};
-const PROP_ROT = {vending:0, bins:0, bike:0, atm:0, coffee:0, cat:0, truck:0};
+const PROP_ROT = {vending:0, bins:-Math.PI/2, bike:0, atm:0, coffee:0, cat:0, truck:0};
 const PAL = {indigo:0x2E3160, cream:0xF1E8D6, wall:0xE6DAC3, steel:0xCDBFA8, dark:0x3A3532, shelf:0xE2D5BC, white:0xF4ECDC};
 const base = put(RB(8.2, .5, 6.4, .12, 4), clay(0x4A4440), 0, -.25, .35);
 // street, with a wet-look material that changes with the weather
@@ -565,7 +565,7 @@ function prop(id, height, {x=0, y=0, z=0, rotY=0, parent=scene} = {}){
 }
 const PROPS = Promise.all([
   prop("vending", 1.4, {x:3.05, y:.1, z:.6, rotY:PROP_ROT.vending}),
-  prop("bins", .42, {x:2.45, y:.1, z:.72, rotY:PROP_ROT.bins}),
+  prop("bins", .42, {x:2.1, y:.1, z:.95, rotY:PROP_ROT.bins}),
   prop("bike", .78, {x:-3.0, y:.1, z:1.18, rotY:PROP_ROT.bike}),
   prop("atm", .95, {x:-1.92, y:.11, z:-.05, rotY:PROP_ROT.atm}),
   prop("coffee", .36, {x:1.95, y:.97, z:-.1, rotY:PROP_ROT.coffee}),
