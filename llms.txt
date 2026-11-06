@@ -1,0 +1,61 @@
+# Isaac Hernandez
+
+> Art director and motion designer in Los Angeles. Isaac turns brands into places you can visit: live brand worlds that run on real-world data, interactive pieces built for the phone, spec campaigns, brand identities, reels and original music. Available now for freelance or full-time art direction, remote or on site in LA.
+
+- Based in: Los Angeles, California (works remotely across time zones)
+- Hire for: art direction, creative direction, campaign concepts, brand identity, motion design and social, interactive brand experiences, real-time 3D web, AI-assisted production, music and sound for brands
+- Contact: isaacsight@gmail.com
+- Portfolio: https://isaacsight.com/
+- Note: the brand work is self-initiated concept and spec work, not commissioned client work. Imagery is AI-assisted under Isaac's art direction; the ideas, design, type, code, edit and music are his.
+
+## Start here
+- [Home](https://isaacsight.com/): selected work, about and contact
+- [Interactive](https://isaacsight.com/interactive.html): live, playable brand worlds
+- [Approach](https://isaacsight.com/approach.html): how Isaac works, what he can be hired for and how AI fits in
+- [Music](https://isaacsight.com/music.html): three original songs with players and cover art
+
+## Interactive work and live brand worlds
+- [SOLA](https://isaacsight.com/projects/sola.html): SOLA: a fictional sunscreen brand whose home is a live, risograph-printed map of the sun on the Los Angeles coast, with a character that runs on the real sun and reels made from the day's readings. A concept by Isaac Hernandez.
+- [YOAKE](https://isaacsight.com/projects/yoake.html): YOAKE (夜明け): a clay convenience store in Tokyo that runs on real Tokyo time, weather and season. Every package on the shelves is designed. An interactive concept by Isaac Hernandez, built in three.js with fal-generated props and Blender-baked light.
+- [Shallows](https://isaacsight.com/projects/shallows.html): Shallows (浅瀬): a playable clay tide pool from Japan's Izu Peninsula. Five real shallow-water species with steering behaviors, collision, and a field guide. An interactive concept by Isaac Hernandez, built in three.js with fal-generated clay models.
+
+## Spec campaigns
+- [Graza](https://isaacsight.com/projects/graza.html): Sign your dinner. A spec campaign system for Graza olive oil: three vertical spots, a billboard and recipe cards, all built on one rule. An unsolicited concept by Isaac Hernandez with AI-assisted production.
+- [Fishwife](https://isaacsight.com/projects/fishwife.html): A postcard you can eat. A spec campaign for Fishwife: a 15-second collage animation, three collage posters and three in-context product photos. An unsolicited concept by Isaac Hernandez with AI-assisted production.
+- [Tracksmith](https://isaacsight.com/projects/tracksmith.html): Before the day has a name. A spec campaign for Tracksmith: a 30-second film and a six-frame photo story of one amateur runner's weekday morning in Boston. An unsolicited concept by Isaac Hernandez with AI-assisted production.
+- [Sportiefs Matcha](https://isaacsight.com/projects/sportiefs.html): Every good day has a warm-up. A spec campaign for Sportiefs Matcha: a 15-second stop-motion film and a six-image editorial series. An unsolicited concept by Isaac Hernandez with AI-assisted production.
+- [Vans](https://isaacsight.com/projects/vans.html): Property of the shop. A spec campaign for Vans: every independent skate shop gets its own checkerboard, dropped on Go Skateboarding Day with no media buy. A 13-slide case-study deck by Isaac Hernandez.
+
+## Brand identities
+- [DAYGLOW](https://isaacsight.com/projects/dayglow.html): A three-flavor soda range built around color and a stacked wordmark. An independent concept study in brand identity · packaging · campaign.
+- [fieldnote](https://isaacsight.com/projects/fieldnote.html): Recipe numbers and ingredient lists become a juice identity. An independent concept study in brand identity · campaign · trade.
+- [LOW TIDE](https://isaacsight.com/projects/lowtide.html): A coastal natural-wine bar identity built on a brush-script sign, enamel green and a very short menu. An independent concept study in brand identity · menu system · signage.
+- [PLOT](https://isaacsight.com/projects/plot.html): A landscape-architecture studio identity built on a parcel-grid mark, terracotta and a site hoarding that announces the garden before it exists. An independent concept study in brand identity · stationery · site hoarding.
+- [SIDE B](https://isaacsight.com/projects/sideb.html): A monthly listening-night identity — a flipped-record B, cobalt and hot pink, and a poster series that gets wheat-pasted all over the neighborhood. An independent concept study in brand identity · poster series · merch.
+- [SIDEQUEST](https://isaacsight.com/projects/sidequest.html): A snack range and gift box built around the idea of a detour. An independent concept study in brand identity · packaging · pr gifting.
+- [TEMPER](https://isaacsight.com/projects/temper.html): A workwear label identity carried entirely by what's sewn on: a woven label, a stamped button, a kraft hangtag, and a line about wearing things in. An independent concept study in brand identity · labels & trims · lookbook.
+
+## Reels
+- [Reels](https://isaacsight.com/reels.html): One prompt, every model: a 100-second reel that takes a single sentence through text-to-image, edit, image-to-video, text-to-audio, upscale and re-render on fal.ai. By Isaac Hernandez.
+
+## Optional
+- [All campaign concepts](https://isaacsight.com/campaigns.html): Thirty-five independent campaign studies spanning music, apparel, hospitality, nonprofits, food, florals, fitness and design, twenty-three with full case studies. Creative direction and design by Isaac Hernandez with AI-assisted imagery.
+- [Bar Covell](https://isaacsight.com/projects/bar-covell.html): Choose an adjective. A typographic campaign for a Los Feliz wine bar with no written list — the bartender’s own question becomes the headline, and a glass fills with words. An independent campaign concept by Isaac Hernandez with AI-assisted artwork.
+- [Barred From LA](https://isaacsight.com/projects/barred-from-la.html): Every bar, its own character. A wanted-poster campaign for small-batch soap — one bar cut in half to show its marbled character, on sun-faded yellow with evidence tags. An independent campaign concept by Isaac Hernandez with AI-assisted artwork.
+- [Bicycle Kitchen](https://isaacsight.com/projects/bicycle-kitchen.html): Your hands. Our tools. A two-color, risograph-style campaign for a volunteer-run nonprofit where people fix their own bikes — an exploded diagram as the hero. An independent campaign concept by Isaac Hernandez with AI-assisted artwork.
+- [Brooke Callahan](https://isaacsight.com/projects/brooke-callahan.html): Dyed by hand. Cut to move. A color-drop campaign for an Echo Park label that designs, dyes and sews in-house — dye-bath fields bleeding into each other. An independent campaign concept by Isaac Hernandez with AI-assisted artwork.
+- [The Chocolate Dispensary](https://isaacsight.com/projects/chocolate-dispensary.html): Find your next favorite. A discovery campaign that treats craft chocolate like an independent bookstore — a shelf of spines, one pulled forward. An independent campaign concept by Isaac Hernandez with AI-assisted artwork.
+- [DEHV](https://isaacsight.com/projects/dehv.html): Scent meets sculpture. A brutalist collection campaign for concrete candles — material, light and an oversized grotesk. An independent campaign concept by Isaac Hernandez with AI-assisted artwork.
+- [Flower Song LA](https://isaacsight.com/projects/flower-song.html): Make something unexpected. A workshop campaign built like an art-school collage — cut paper, loud color, and permission to get it wrong. An independent campaign concept by Isaac Hernandez with AI-assisted artwork.
+- [FlowerSchool Los Angeles](https://isaacsight.com/projects/flowerschool-la.html): An evening in bloom. An invitation-style campaign for private group workshops — ink botanicals, midnight aubergine and a line that reads like an RSVP card. An independent campaign concept by Isaac Hernandez with AI-assisted artwork.
+- [Fugetsu-Do](https://isaacsight.com/projects/fugetsu-do.html): Soft since 1903. A seasonal campaign for a 123-year-old Little Tokyo mochi shop — layered washi circles instead of product shots, and a line that carries the whole history. An independent campaign concept by Isaac Hernandez with AI-assisted artwork.
+- [Jessica Alpert Design](https://isaacsight.com/projects/jessica-alpert.html): Rooms that know you. A new-client campaign for a Studio City interior design practice — a floor plan with one room lit from within. An independent campaign concept by Isaac Hernandez with AI-assisted artwork.
+- [Joan Gray Candles](https://isaacsight.com/projects/joan-gray.html): A memory, lit. A gifting campaign that treats scent as memory — forest shadows on folded paper, not a product shot. An independent campaign concept by Isaac Hernandez with AI-assisted artwork.
+- [LACAUSA](https://isaacsight.com/projects/lacausa.html): Made here. Worn everywhere. A process-led campaign for a made-in-LA womenswear label — sun-washed linen and late-afternoon light instead of a lookbook. An independent campaign concept by Isaac Hernandez with AI-assisted artwork.
+- [Milla Chocolates](https://isaacsight.com/projects/milla.html): A gift, beautifully considered. A gifting campaign that treats the box like a gallery object — faceted geometry in cocoa, blush and one plane of gold. An independent campaign concept by Isaac Hernandez with AI-assisted artwork.
+- [Mona Lynne](https://isaacsight.com/projects/mona-lynne.html): Make room for a little ritual. A pop-art campaign for soaps and bath bombs — a grid of candy-coloured bathroom tiles, one fizzing sphere spilling foam across them, and a hand-painted sign for a headline. An independent campaign concept by Isaac Hernandez with AI-assisted artwork.
+- [Natural Amor](https://isaacsight.com/projects/natural-amor.html): A little care, every day. An editorial campaign built on one enormous drop of milk-white water, a vertical headline and a sprig of lavender — the ritual, not the product. An independent campaign concept by Isaac Hernandez with AI-assisted artwork.
+- [Permanent Records Roadhouse](https://isaacsight.com/projects/permanent-records.html): Dig all day. Stay for the show. A gig-poster campaign for a record store that becomes a bar and a stage after dark — a vinyl groove turning into a beam of light. An independent campaign concept by Isaac Hernandez with AI-assisted artwork.
+- [Soft Ember](https://isaacsight.com/projects/soft-ember.html): Slow the moment. A mood-led collection campaign — a sun disappearing behind linen hills, and a line about taking your time. An independent campaign concept by Isaac Hernandez with AI-assisted artwork.
+- [TuCha](https://isaacsight.com/projects/tucha.html): A sweeter pause. A tea-and-dessert campaign built from steam, a clay arch and a gradient that moves from matcha to milk tea. An independent campaign concept by Isaac Hernandez with AI-assisted artwork.
+- [Verde Soapery](https://isaacsight.com/projects/verde-soapery.html): Made for the occasion. A gifting campaign printed like wrapping paper — pressed flowers and eucalyptus in two-colour risograph, with the line cut across them on a green ribbon. An independent campaign concept by Isaac Hernandez with AI-assisted artwork.
