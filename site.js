@@ -76,3 +76,19 @@ document.querySelectorAll('details').forEach(section => {
     ({particles:particles,halftone:halftone,ascii:ascii,slices:slices,wave:wave})[modes[mode]](now,k);
     ripples=ripples.filter(function(rp){ return now-rp.t<1600; }); requestAnimationFrame(draw); }
 })();
+
+// Phone menu: a button that opens the main navigation as a list. Without JS the links stay visible.
+(function(){
+  var header = document.querySelector('.site-header'), nav = header && header.querySelector('nav');
+  if (!nav) return;
+  document.documentElement.classList.add('js');
+  nav.id = nav.id || 'main-nav';
+  var b = document.createElement('button');
+  b.type = 'button'; b.className = 'menu-toggle'; b.textContent = 'Menu';
+  b.setAttribute('aria-expanded', 'false'); b.setAttribute('aria-controls', nav.id);
+  header.insertBefore(b, nav);
+  function set(open){ header.classList.toggle('menu-open', open); b.setAttribute('aria-expanded', String(open)); b.textContent = open ? 'Close' : 'Menu'; }
+  b.addEventListener('click', function(){ set(!header.classList.contains('menu-open')); });
+  nav.addEventListener('click', function(e){ if (e.target.closest('a')) set(false); });
+  document.addEventListener('keydown', function(e){ if (e.key === 'Escape' && header.classList.contains('menu-open')) { set(false); b.focus(); } });
+})();
