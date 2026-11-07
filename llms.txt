@@ -17,6 +17,7 @@
 - [Interactive](https://isaacsight.com/interactive.html): live, playable brand worlds
 - [Approach](https://isaacsight.com/approach.html): how Isaac works, what he can be hired for and how AI fits in
 - [Studio Rules](https://isaacsight.com/rules.html): the rules his AI agents read before building: two riso inks, type first, no generated faces, three directions and a pick, his sign-off on every final
+- [Look up.](https://isaacsight.com/projects/specs-look-up.html): an unsolicited two-ink poster concept for Specs (not affiliated with Snap); artwork AI-assisted under his direction, type set in code
 - [Rules Off / Rules On](https://isaacsight.com/interactive/rules/): one brief built twice by an AI agent, with and without his studio rules, compared with a slider
 - [Music](https://isaacsight.com/music.html): three original songs with players and cover art
 
