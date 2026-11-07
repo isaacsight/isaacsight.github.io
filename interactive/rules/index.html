@@ -1,0 +1,60 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Rules Off / Rules On — Isaac Hernandez</title><meta name="description" content="One brief, built twice by an AI agent: once with no rules, once with Isaac Hernandez's studio rules. Drag the slider to see what the rules change."><link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' fill='%23e8ff65'/%3E%3Ctext x='8' y='47' font-family='Arial' font-size='42' font-weight='bold'%3Eih%3C/text%3E%3C/svg%3E"><meta property="og:type" content="website"><meta property="og:title" content="Rules Off / Rules On — Isaac Hernandez"><meta property="og:description" content="One brief, built twice by an AI agent. Drag to see what the rules change."><meta property="og:url" content="https://isaacsight.com/interactive/rules/"><meta property="og:image" content="https://isaacsight.com/assets/rules/hero.jpg"><link rel="stylesheet" href="/style.css?v=7"><script src="/site.js?v=4" defer></script>
+<style>
+.ro-frame{position:relative;width:100%;aspect-ratio:1280/800;margin-top:56px;overflow:hidden;background:#ddd;border:1px solid var(--line);touch-action:pan-y;cursor:ew-resize;user-select:none}
+.ro-frame iframe{position:absolute;left:0;top:0;width:1280px;height:800px;border:0;transform-origin:0 0;pointer-events:none}
+.ro-on{clip-path:inset(0 0 0 var(--x,50%))}
+.ro-bar{position:absolute;top:0;bottom:0;left:var(--x,50%);width:2px;margin-left:-1px;background:#141414;pointer-events:none}
+.ro-bar::after{content:"";position:absolute;top:50%;left:50%;width:44px;height:44px;margin:-22px 0 0 -22px;border-radius:50%;background:#e8ff65;border:2px solid #141414;box-sizing:border-box}
+.ro-tag{position:absolute;top:14px;padding:6px 10px;background:#141414;color:#faf9f6;font-size:13px;pointer-events:none}
+.ro-tag.l{left:14px}.ro-tag.r{right:14px}
+.ro-range{position:absolute;inset:0;width:100%;height:100%;opacity:0;margin:0;cursor:ew-resize}
+.ro-range:focus-visible+.ro-bar::after{outline:3px solid #141414;outline-offset:3px}
+.ro-hint{display:flex;justify-content:space-between;gap:20px;font-size:13px;color:var(--muted);margin-top:12px}
+.ro-brief{margin-top:48px;border-top:1px solid var(--line);padding-top:18px;display:grid;grid-template-columns:150px 1fr;gap:28px}
+.ro-brief span{font-family:Georgia,serif;font-style:italic;color:var(--muted)}
+.ro-brief p{margin:0;line-height:1.65;max-width:720px}
+.ro-notes{margin:56px 0 0;padding:0;list-style:none}
+.ro-notes li{display:grid;grid-template-columns:150px 1fr 1fr;gap:28px;border-top:1px solid var(--line);padding:18px 0}
+.ro-notes li>span{font-family:Georgia,serif;font-style:italic;color:var(--muted)}
+.ro-notes p{margin:0;line-height:1.6}
+.ro-notes p em{font-style:normal;color:var(--muted);display:block;font-size:13px;margin-bottom:4px}
+.ro-links{display:flex;flex-wrap:wrap;gap:12px 28px;margin-top:28px}
+@media (max-width:720px){.ro-brief,.ro-notes li{grid-template-columns:1fr;gap:8px}.ro-tag{font-size:11px;top:8px;padding:4px 7px}.ro-tag.l{left:8px}.ro-tag.r{right:8px}.ro-bar::after{width:34px;height:34px;margin:-17px 0 0 -17px}}
+</style></head><body class="case-page"><a class="skip" href="#main">Skip to content</a><header class="site-header"><a class="signature" href="/" aria-label="Isaac Hernandez home">Isaac<br>Hernandez<span class="signature-mark">✳</span></a><span class="header-note">Independent concepts<br>Creative direction · Design · Motion</span><nav aria-label="Main navigation"><a href="/#work">Work <sup>13</sup></a><a href="/campaigns.html">Campaigns</a><a href="/interactive.html" aria-current="page">Interactive</a><a href="/music.html">Music</a><a href="/reels.html">Reels</a><a href="/approach.html">Approach</a><a href="/#about">About</a></nav></header>
+<main id="main">
+<section class="case-intro wrap"><div class="case-topline"><a class="text-link" href="/interactive.html">Interactive</a><span>Rules off / Rules on</span><span>Art direction · AI agents</span></div><h1 class="brand-grotesk">Rules Off / On</h1><div class="case-deck"><h2>Same brief.<br>Same AI agent.<br>Drag to compare.</h2><div><p>I gave an AI agent one brief, twice. The first time it had no rules. The second time it first read my <a class="text-link" href="/rules.html">studio rules</a>. Both results are shown exactly as the agent made them, with no edits.</p><span>Fictional shop · AI-assisted under my direction</span></div></div>
+
+<div class="ro-frame" id="frame" style="--x:50%">
+<iframe class="ro-off" src="off.html" title="Rules off: the agent's homepage with no rules" scrolling="no" tabindex="-1" loading="lazy"></iframe>
+<iframe class="ro-on" src="on.html" title="Rules on: the agent's homepage after reading the studio rules" scrolling="no" tabindex="-1" loading="lazy"></iframe>
+<span class="ro-tag l">Rules off</span><span class="ro-tag r">Rules on</span>
+<input class="ro-range" id="range" type="range" min="0" max="100" value="50" aria-label="Compare: slide left to see more of the rules-on version, right for rules off">
+<span class="ro-bar" aria-hidden="true"></span>
+</div>
+<div class="ro-hint"><span>← Rules off</span><span>Drag the slider</span><span>Rules on →</span></div>
+
+<div class="ro-brief"><span>The brief</span><p>Tin Moon Records is a small independent record shop in Highland Park, Los Angeles (a fictional shop, made up for this test). It sells new and used vinyl and hosts free listening sessions every Friday night. The first screen of the homepage needs the shop name, a headline, one supporting line, a “Visit the shop” button, and the hours and neighbourhood. Both runs got this brief word for word, at the same 1280 × 800 size.</p></div>
+</section>
+
+<section class="case-section wrap" id="changes"><div class="section-kicker"><span>What the rules changed</span><span>Each change, and the rule behind it.</span></div><div class="editorial-grid"><h2>Rule by<br>rule.</h2><p>After the rules-on run, the agent listed each decision a rule had changed and what it would have done otherwise. Its answers are below, checked against the finished page.</p></div><ul class="ro-notes">
+<li><span>Colour</span><p><em>What it would have done</em>Near-black text, a cream background and one accent colour.</p><p><em>What the rules made it do</em>Two riso inks only, pink and blue. The purple appears only where they print over each other. (<a class="text-link" href="/rules.html#ink">Ink and paper</a>: two inks)</p></li>
+<li><span>Paper</span><p><em>What it would have done</em>Pure white or a cool light grey.</p><p><em>What the rules made it do</em>A warm off-white paper, #F3EEE3. (<a class="text-link" href="/rules.html#ink">Ink and paper</a>: never pure white)</p></li>
+<li><span>Depth</span><p><em>What it would have done</em>A soft drop shadow on the button and a sheen on the record.</p><p><em>What the rules made it do</em>A solid pink block set behind the button, and the blue printed 4 px out of line with the pink, on purpose. (<a class="text-link" href="/rules.html#ink">Ink and paper</a>: depth without effects)</p></li>
+<li><span>Type</span><p><em>What it would have done</em>Shrink the headline to about 100 px so it fits beside the record.</p><p><em>What the rules made it do</em>The headline stays at 112 px on the scale and runs straight across the moon, printing darker where it crosses the pink. (<a class="text-link" href="/rules.html#type">Type leads</a>: fixed sizes)</p></li>
+<li><span>Labels</span><p><em>What it would have done</em>“HIGHLAND PARK · EST.” in small spaced capitals above the headline.</p><p><em>What the rules made it do</em>No label above the headline. The shop name is a plain wordmark in the corner. (<a class="text-link" href="/rules.html#never">Never list</a>)</p></li>
+<li><span>The idea</span><p><em>What it would have done</em>First idea: a spinning record with moon phases around it.</p><p><em>What the rules made it do</em>Cut to one move, a still record that is the moon. “Records for every phase.” (<a class="text-link" href="/rules.html#never">Never list</a>: one move per idea)</p></li>
+<li><span>Motion</span><p><em>What it would have done</em>Fade the headline in.</p><p><em>What the rules made it do</em>Each line lands in 0.14 s and holds dead still. (<a class="text-link" href="/rules.html#type">Type leads</a>: land, then hold still)</p></li>
+</ul><div class="ro-links"><a class="campaign-cta" href="/rules.html">Read the studio rules ↗</a><a class="text-link" href="off.html" target="_blank" rel="noopener">Open rules off full size</a><a class="text-link" href="on.html" target="_blank" rel="noopener">Open rules on full size</a></div></section>
+
+<section class="services wrap"><div class="contact-band"><h2>Have a brief?</h2><div><p>Send it over. It gets the rules-on version.</p><a class="campaign-cta" href="mailto:isaacsight@gmail.com?subject=A%20brief%20for%20Isaac">isaacsight@gmail.com ↗</a><div class="ro-links"><a class="text-link" href="/interactive.html">Interactive</a><a class="text-link" href="/approach.html">Approach</a></div></div></div></section>
+</main><footer class="site-footer wrap"><span>Isaac Hernandez © 2026</span><span>Independent concept work</span><a href="#main">Back to top</a></footer>
+<script>
+(function(){
+  var f=document.getElementById('frame'), r=document.getElementById('range'), ifr=f.querySelectorAll('iframe');
+  function fit(){var s=f.clientWidth/1280; ifr.forEach(function(i){i.style.transform='scale('+s+')';});}
+  function set(v){f.style.setProperty('--x',v+'%');}
+  r.addEventListener('input',function(){set(r.value);});
+  new ResizeObserver(fit).observe(f); fit();
+})();
+</script>
+</body></html>

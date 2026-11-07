@@ -16,6 +16,7 @@
 - [Interactive](https://isaacsight.com/interactive.html): live, playable brand worlds
 - [Approach](https://isaacsight.com/approach.html): how Isaac works, what he can be hired for and how AI fits in
 - [Studio Rules](https://isaacsight.com/rules.html): the rules his AI agents read before building: two riso inks, type first, no generated faces, three directions and a pick, his sign-off on every final
+- [Rules Off / Rules On](https://isaacsight.com/interactive/rules/): one brief built twice by an AI agent, with and without his studio rules, compared with a slider
 - [Music](https://isaacsight.com/music.html): three original songs with players and cover art
 
 ## Interactive work and live brand worlds

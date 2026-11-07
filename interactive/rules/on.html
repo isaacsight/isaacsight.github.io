@@ -1,0 +1,268 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tin Moon Records</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Inter:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  /* Two riso inks on warm uncoated paper. New colours come only from overprint (multiply). */
+  :root {
+    --ink-pink: #FF48B0;   /* ink-1 Fluorescent Pink */
+    --ink-blue: #3255A4;   /* ink-2 Medium Blue (riso Medium Blue) */
+    --paper:    #F3EEE3;   /* warm uncoated off-white */
+
+    /* type scale: 16 20 28 40 64 112 180 */
+    --s-16: 16px; --s-20: 20px; --s-28: 28px; --s-112: 112px;
+
+    --display: "Archivo Black", "Arial Black", sans-serif;
+    --text: "Inter", system-ui, sans-serif;
+
+    --land: cubic-bezier(0.23, 1, 0.32, 1); /* power4.out */
+  }
+
+  * { box-sizing: border-box; }
+
+  html, body {
+    margin: 0;
+    width: 1280px;
+    height: 800px;
+    overflow: hidden;
+    background: var(--paper);
+    color: var(--ink-blue);
+    font-family: var(--text);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .hero {
+    position: relative;
+    width: 1280px;
+    height: 800px;
+    isolation: isolate;
+  }
+
+  /* ---------- the record that is also the moon ---------- */
+  .moon {
+    position: absolute;
+    left: 620px;
+    top: 40px;
+    width: 720px;
+    height: 720px;
+    z-index: 1;
+  }
+  .moon .plate-blue { mix-blend-mode: multiply; }
+
+  /* ---------- grain: a texture layer under the type, never on it ---------- */
+  .grain {
+    position: absolute;
+    inset: 0;
+    width: 1280px;
+    height: 800px;
+    z-index: 2;
+    mix-blend-mode: multiply;
+    pointer-events: none;
+  }
+
+  /* ---------- type ---------- */
+  .wordmark {
+    position: absolute;
+    left: 64px;
+    top: 48px;
+    z-index: 3;
+    margin: 0;
+    font-family: var(--display);
+    font-size: var(--s-28);
+    line-height: 1;
+    color: var(--ink-blue);
+    text-decoration: none;
+  }
+
+  /* The headline is its own layer so its multiply reaches the moon plate
+     (a z-indexed parent would trap the blend inside its own stacking context). */
+  h1 {
+    position: absolute;
+    left: 64px;
+    top: 196px;
+    z-index: 3;
+    margin: 0;
+    font-family: var(--display);
+    font-weight: 400;
+    font-size: var(--s-112);
+    line-height: 0.92;
+    letter-spacing: -0.01em;
+    color: var(--ink-blue);
+    mix-blend-mode: multiply; /* overprints the pink moon */
+  }
+  h1 span {
+    display: block;
+    animation: land 0.14s var(--land) both;
+  }
+  h1 span + span { animation-delay: 0.08s; }
+
+  .copy {
+    position: absolute;
+    left: 64px;
+    top: 452px; /* 196 + two 112px lines at 0.92 + 40 */
+    z-index: 3;
+  }
+
+  .support {
+    margin: 0;
+    max-width: 520px;
+    font-size: var(--s-28);
+    line-height: 1.25;
+    font-weight: 400;
+    color: var(--ink-blue);
+  }
+
+  .visit {
+    position: relative;
+    display: inline-block;
+    margin-top: 40px;
+  }
+  /* misregistered pink plate behind the button, a fixed 6px offset */
+  .visit::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: var(--ink-pink);
+    transform: translate(6px, 6px);
+  }
+  .visit a {
+    position: relative;
+    display: block;
+    padding: 20px 32px;
+    background: var(--ink-blue);
+    color: var(--paper);
+    font-family: var(--text);
+    font-weight: 600;
+    font-size: var(--s-20);
+    line-height: 1;
+    text-decoration: none;
+    transition: transform 0.12s var(--land);
+  }
+  .visit a:hover { transform: translate(-3px, -3px); }
+  .visit a:active { transform: translate(6px, 6px); }
+  .visit a:focus-visible {
+    outline: 3px solid var(--ink-blue);
+    outline-offset: 6px;
+  }
+
+  .info {
+    position: absolute;
+    left: 64px;
+    bottom: 48px;
+    z-index: 3;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    font-size: var(--s-16);
+    font-weight: 600;
+    line-height: 1;
+    color: var(--ink-blue);
+  }
+  .info .rule {
+    display: block;
+    width: 40px;
+    height: 2px;
+    background: var(--ink-blue);
+  }
+
+  @keyframes land {
+    from { transform: translateY(0.12em); }
+    to   { transform: none; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    h1 span { animation: none; }
+    .visit a { transition: none; }
+  }
+</style>
+</head>
+<body>
+<main class="hero">
+
+  <a class="wordmark" href="#">Tin Moon Records</a>
+
+  <h1><span>Records for</span><span>every phase.</span></h1>
+
+  <div class="copy">
+    <p class="support">New and used vinyl, plus free listening sessions every Friday night.</p>
+    <div class="visit"><a href="#visit">Visit the shop</a></div>
+  </div>
+
+  <p class="info">
+    <span>Open Tue–Sun, 11–8</span>
+    <span class="rule" aria-hidden="true"></span>
+    <span>Highland Park, Los Angeles</span>
+  </p>
+
+  <!-- One move: the record is the moon. Pink plate = lit side, blue plate = shadow + grooves,
+       printed 4px out of register on purpose. -->
+  <svg class="moon" viewBox="0 0 720 720" aria-hidden="true">
+    <defs>
+      <clipPath id="disc"><circle cx="360" cy="360" r="360"/></clipPath>
+      <mask id="label-knockout" maskUnits="userSpaceOnUse" x="0" y="0" width="720" height="720">
+        <rect width="720" height="720" fill="#fff"/>
+        <circle cx="360" cy="360" r="104" fill="#000"/>
+      </mask>
+    </defs>
+
+    <!-- plate 1: Fluorescent Pink -->
+    <g class="plate-pink">
+      <circle cx="360" cy="360" r="360" fill="#FF48B0"/>
+    </g>
+
+    <!-- plate 2: Medium Blue, set 4px right / 3px up -->
+    <g class="plate-blue" transform="translate(4 -3)">
+      <g clip-path="url(#disc)" mask="url(#label-knockout)">
+        <!-- the shadow side: a second disc, so the lit side reads as a crescent -->
+        <circle cx="720" cy="360" r="360" fill="#3255A4"/>
+        <!-- grooves -->
+        <g fill="none" stroke="#3255A4" stroke-width="1.5">
+          <circle cx="360" cy="360" r="122"/>
+          <circle cx="360" cy="360" r="134"/>
+          <circle cx="360" cy="360" r="146"/>
+          <circle cx="360" cy="360" r="158"/>
+          <circle cx="360" cy="360" r="170"/>
+          <circle cx="360" cy="360" r="182"/>
+          <circle cx="360" cy="360" r="194"/>
+          <circle cx="360" cy="360" r="206"/>
+          <circle cx="360" cy="360" r="218"/>
+          <circle cx="360" cy="360" r="230"/>
+          <circle cx="360" cy="360" r="242"/>
+          <circle cx="360" cy="360" r="254"/>
+          <circle cx="360" cy="360" r="266"/>
+          <circle cx="360" cy="360" r="278"/>
+          <circle cx="360" cy="360" r="290"/>
+          <circle cx="360" cy="360" r="302"/>
+          <circle cx="360" cy="360" r="314"/>
+          <circle cx="360" cy="360" r="326"/>
+          <circle cx="360" cy="360" r="338"/>
+        </g>
+        <!-- run-out gap between the last groove and the label -->
+        <circle cx="360" cy="360" r="112" fill="none" stroke="#3255A4" stroke-width="3"/>
+      </g>
+    </g>
+
+    <!-- spindle hole: bare paper, no ink -->
+    <circle cx="360" cy="360" r="10" fill="#F3EEE3"/>
+  </svg>
+
+  <!-- grain texture layer (sits under the type) -->
+  <svg class="grain" viewBox="0 0 1280 800" aria-hidden="true">
+    <filter id="noise" x="0" y="0" width="100%" height="100%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.85" numOctaves="2" seed="7" stitchTiles="stitch"/>
+      <feColorMatrix type="matrix" values="0 0 0 0 0.20
+                                           0 0 0 0 0.19
+                                           0 0 0 0 0.17
+                                           0 0 0 -1.6 1.05"/>
+    </filter>
+    <rect width="1280" height="800" filter="url(#noise)" opacity="0.22"/>
+  </svg>
+
+</main>
+</body>
+</html>
