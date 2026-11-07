@@ -9,10 +9,11 @@
 - Behance: https://www.behance.net/isaachernandez
 - Instagram: https://www.instagram.com/isaaksight/
 - Portfolio: https://isaacsight.com/
-- Note: the brand work is self-initiated concept and spec work, not commissioned client work. Imagery is AI-assisted under Isaac's art direction; the ideas, design, type, code, edit and music are his.
+- Note: the brand work is self-initiated concept and spec work, not commissioned client work. Imagery, footage and some sound are generated with AI models under Isaac's direction, and code is written by AI coding agents under his direction; the ideas, art direction, design, type and edit are his.
 
 ## Start here
 - [Home](https://isaacsight.com/): selected work, about and contact
+- [Selected work](https://isaacsight.com/work.html): one visual page of the strongest print, interactive and film pieces, each linking to its case study
 - [Interactive](https://isaacsight.com/interactive.html): live, playable brand worlds
 - [Approach](https://isaacsight.com/approach.html): how Isaac works, what he can be hired for and how AI fits in
 - [Studio Rules](https://isaacsight.com/rules.html): the rules his AI agents read before building: two riso inks, type first, no generated faces, three directions and a pick, his sign-off on every final
