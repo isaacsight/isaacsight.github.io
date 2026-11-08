@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Float — Codevember — Isaac Hernandez</title>
 <link rel="canonical" href="https://isaacsight.com/interactive/codevember/07-float.html">
-<link rel="stylesheet" href="lib.css">
+<link rel="stylesheet" href="lib.css?v=2">
 </head>
 <body>
 <a class="back" href="/codevember.html">← Codevember</a>
@@ -15,7 +15,7 @@
 // each other into rings, then a comb drags them into patterns. The shapes come
 // from Aubrey Jaffer's marbling equations, so nothing is painted, only moved.
 // Click to drop ink. Drag to comb. Press Space to start over.
-import { setup, credit, run, ease, W, H, DISPLAY, font } from './lib.js';
+import { setup, credit, run, ease, W, H, DISPLAY, font } from './lib.js?v=2';
 
 const k = await setup();
 const { ctx } = k;
@@ -152,7 +152,7 @@ function render(t) {
 // Click to drop ink, drag to comb, Space to start over.
 let down = null, colorIx = 0;
 const at = (e) => { const r = k.c.getBoundingClientRect(); return [(e.clientX - r.left) * (W / r.width), (e.clientY - r.top) * (H / r.height)]; };
-k.c.addEventListener('pointerdown', (e) => { manual = true; down = { p: at(e), moved: false }; k.c.setPointerCapture(e.pointerId); });
+k.c.addEventListener('pointerdown', (e) => { manual = true; down = { p: at(e), moved: false }; try { k.c.setPointerCapture(e.pointerId); } catch {} });
 k.c.addEventListener('pointermove', (e) => {
   if (!down) return;
   const p = at(e), dx = p[0] - down.p[0], dy = p[1] - down.p[1], L = Math.hypot(dx, dy);

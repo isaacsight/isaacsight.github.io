@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Out of Line — Codevember — Isaac Hernandez</title>
 <link rel="canonical" href="https://isaacsight.com/interactive/codevember/01-out-of-line.html">
-<link rel="stylesheet" href="lib.css">
+<link rel="stylesheet" href="lib.css?v=2">
 </head>
 <body>
 <a class="back" href="/codevember.html">← Codevember</a>
@@ -13,7 +13,7 @@
 // 01 · OUT OF LINE
 // Two plates of the same words. The blue plate slips out of register on the beat
 // and locks back. Drag it yourself; let go and it snaps home.
-import { setup, paper, print, credit, makePlate, fitSize, run, ease, INK, W, H, DISPLAY, font } from './lib.js';
+import { setup, paper, print, credit, makePlate, fitSize, run, ease, INK, W, H, DISPLAY, font } from './lib.js?v=2';
 
 const k = await setup();
 const LOOP = 8;
@@ -65,7 +65,7 @@ const toCanvas = (e) => {
   const r = k.c.getBoundingClientRect();
   return [(e.clientX - r.left) * (W / r.width), (e.clientY - r.top) * (H / r.height)];
 };
-k.c.addEventListener('pointerdown', (e) => { drag = { from: toCanvas(e) }; k.c.setPointerCapture(e.pointerId); });
+k.c.addEventListener('pointerdown', (e) => { drag = { from: toCanvas(e) }; try { k.c.setPointerCapture(e.pointerId); } catch {} });
 k.c.addEventListener('pointermove', (e) => {
   if (!drag) return;
   const [x, y] = toCanvas(e);

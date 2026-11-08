@@ -5,10 +5,10 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Riso Press — Codevember — Isaac Hernandez</title>
 <link rel="canonical" href="https://isaacsight.com/interactive/codevember/04-riso-press.html">
-<link rel="stylesheet" href="lib.css">
+<link rel="stylesheet" href="lib.css?v=2">
 <style>
   body { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; padding: 12px 16px; box-sizing: border-box; }
-  canvas { cursor: default; }
+  canvas { cursor: default; width: min(calc(100vw - 32px), calc((100dvh - var(--bar, 120px) - 40px) * 0.8)); }
   .bar { display: flex; flex-wrap: wrap; gap: 8px 10px; align-items: center; justify-content: center; max-width: 1080px;
          font: 400 14px/1.2 Text, Arial, sans-serif; color: #3d63b8; }
   .bar button, .bar label.btn, .bar input[type=text] {
@@ -42,19 +42,15 @@
 // Choose any photo. It is pulled into two inks the way a risograph would print it:
 // blue takes the shadows and cool tones, pink takes the warm ones, each as a
 // grain of dots. The two plates go down one after the other, a little out of line.
-import { setup, credit, makePlate, fitSize, run, ease, rng, INK, W, H, DISPLAY, font } from './lib.js';
+import { setup, credit, makePlate, fitSize, run, ease, rng, INK, W, H, DISPLAY, font } from './lib.js?v=2';
 
 const k = await setup();
 const { ctx, c } = k;
 const bar = document.getElementById('bar');
 document.body.appendChild(bar); // controls sit under the poster
 
-// Keep the poster on screen above the controls.
-const fit = () => {
-  const s = Math.min((innerWidth - 32) / W, (innerHeight - bar.offsetHeight - 40) / H);
-  c.style.width = W * s + 'px';
-  c.style.height = H * s + 'px';
-};
+// Keep the poster on screen above the controls (CSS does the sizing; JS only reports the bar height).
+const fit = () => document.documentElement.style.setProperty('--bar', bar.offsetHeight + 'px');
 addEventListener('resize', fit);
 fit();
 
@@ -206,8 +202,19 @@ function render(t) {
 function load(src) {
   return new Promise((res, rej) => { const im = new Image(); im.onload = () => res(im); im.onerror = rej; im.src = src; });
 }
+const note = document.createElement('span');
+note.setAttribute('role', 'status');
+note.style.cssText = 'flex-basis:100%;text-align:center;min-height:1em';
+bar.appendChild(note);
 async function usePhoto(src) {
-  photo = await load(src);
+  try {
+    photo = await load(src);
+  } catch {
+    // e.g. an iPhone HEIC file, which browsers can't open
+    note.textContent = 'That photo didn’t open. Try a JPG or PNG.';
+    return;
+  }
+  note.textContent = '';
   separate();
   k.restart(0);
 }

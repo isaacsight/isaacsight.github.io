@@ -55,13 +55,6 @@ export async function setup() {
   c.height = H;
   document.body.appendChild(c);
   const ctx = c.getContext('2d');
-  const fit = () => {
-    const s = Math.min(innerWidth / W, innerHeight / H);
-    c.style.width = W * s + 'px';
-    c.style.height = H * s + 'px';
-  };
-  addEventListener('resize', fit);
-  fit();
   for (const [name, file, weight] of [['Display', 'assets/display.ttf', '800'], ['Text', 'assets/text.ttf', '400']]) {
     try {
       const f = new FontFace(name, `url(${file})`, { weight });

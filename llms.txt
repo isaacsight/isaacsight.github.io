@@ -3,13 +3,13 @@
 > Art director and motion designer in Los Angeles. Isaac turns brands into places you can visit: live brand worlds that run on real-world data, interactive pieces built for the phone, spec campaigns, brand identities, reels and original music. Available now for freelance or full-time art direction, remote or on site in LA.
 
 - Based in: Los Angeles, California (works remotely across time zones)
-- Hire for: art direction, creative direction, campaign concepts, brand identity, motion design and social, interactive brand experiences, real-time 3D web, AI-assisted production, music and sound for brands
+- Hire for: art direction, creative direction, campaign concepts, brand identity, motion design and social, launch loops for product launches, creative coding and generative motion, interactive brand experiences, real-time 3D web (three.js / WebGL), AI-assisted production, music and sound for brands
 - Contact: isaacsight@gmail.com
 - LinkedIn: https://www.linkedin.com/in/isaac-hernandez-567224179/
 - Behance: https://www.behance.net/isaachernandez
 - Instagram: https://www.instagram.com/isaaksight/
 - Portfolio: https://isaacsight.com/
-- Note: the brand work is self-initiated concept and spec work, not commissioned client work. Imagery, footage and some sound are generated with AI models under Isaac's direction, and code is written by AI coding agents under his direction; the ideas, art direction, design, type and edit are his.
+- Note: the brand work is self-initiated concept and spec work, not commissioned client work. Imagery, footage and some sound are generated with AI models under Isaac's direction, and code is written by AI coding agents (Claude) under his direction; the ideas, art direction, design, type and edit are his.
 
 ## Start here
 - [Home](https://isaacsight.com/): selected work, about and contact
@@ -22,7 +22,7 @@
 - [Music](https://isaacsight.com/music.html): three original songs with players and cover art
 
 ## Interactive work and live brand worlds
-- [Codevember](https://isaacsight.com/codevember.html): Codevember 2026: eight small pieces made in code by AI coding agents under Isaac's direction, each following a real material's rules. Riso Press turns any photo into a pink and blue risograph print; Float marbles ink on water (suminagashi); Sun Print is a cyanotype; Departures is a split-flap board; Fold, Payday, By Hand and Out of Line are two-ink type pieces.
+- [Codevember](https://isaacsight.com/codevember.html): Codevember 2026: ten small pieces made in code by AI coding agents under Isaac's direction, each following a real material's rules. Riso Press turns any photo into a pink and blue risograph print; Float marbles ink on water (suminagashi); Sun Print is a cyanotype; Departures is a split-flap board; Edition is a letterpress broadside that reprints every hour with live Los Angeles time and weather; Stitch is cross-stitch sewn one X at a time; Fold, Payday, By Hand and Out of Line are two-ink type pieces.
 - [SOLA](https://isaacsight.com/projects/sola.html): SOLA: a fictional sunscreen brand whose home is a live, risograph-printed map of the sun on the Los Angeles coast, with a character that runs on the real sun and reels made from the day's readings. A concept by Isaac Hernandez.
 - [YOAKE](https://isaacsight.com/projects/yoake.html): YOAKE (夜明け): a clay convenience store in Tokyo that runs on real Tokyo time, weather and season. Every package on the shelves is designed. An interactive concept by Isaac Hernandez, built in three.js with fal-generated props and Blender-baked light.
 - [Shallows](https://isaacsight.com/projects/shallows.html): Shallows (浅瀬): a playable clay tide pool from Japan's Izu Peninsula. Five real shallow-water species with steering behaviors, collision, and a field guide. An interactive concept by Isaac Hernandez, built in three.js with fal-generated clay models.

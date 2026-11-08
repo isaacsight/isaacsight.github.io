@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Fold — Codevember — Isaac Hernandez</title>
 <link rel="canonical" href="https://isaacsight.com/interactive/codevember/05-fold.html">
-<link rel="stylesheet" href="lib.css">
+<link rel="stylesheet" href="lib.css?v=2">
 </head>
 <body>
 <a class="back" href="/codevember.html">← Codevember</a>
@@ -13,7 +13,7 @@
 // 05 · FOLD
 // A two-ink poster folded into four panels. It unfolds one panel at a time,
 // and the line only reads once it is fully open. Drag down to unfold it yourself.
-import { setup, makePlate, fitSize, run, credit, INK, W, H, DISPLAY, font } from './lib.js';
+import { setup, makePlate, fitSize, run, credit, INK, W, H, DISPLAY, font } from './lib.js?v=2';
 
 const k = await setup();
 const { ctx } = k;
@@ -88,7 +88,7 @@ function progressAt(t) {
 // Drag down to unfold, up to fold.
 let drag = null, held = 0;
 const toY = (e) => { const r = k.c.getBoundingClientRect(); return (e.clientY - r.top) * (H / r.height); };
-k.c.addEventListener('pointerdown', (e) => { drag = { y: toY(e), p: lastP }; k.c.setPointerCapture(e.pointerId); });
+k.c.addEventListener('pointerdown', (e) => { drag = { y: toY(e), p: lastP }; try { k.c.setPointerCapture(e.pointerId); } catch {} });
 k.c.addEventListener('pointermove', (e) => { if (drag) held = Math.min(Math.max(drag.p + (toY(e) - drag.y) / SH, 0), 3); });
 k.c.addEventListener('pointerup', () => { drag = null; held >= 2.9 ? k.restart(5.4) : k.restart(0); });
 let lastP = 0;

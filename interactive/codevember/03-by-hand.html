@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>By Hand — Codevember — Isaac Hernandez</title>
 <link rel="canonical" href="https://isaacsight.com/interactive/codevember/03-by-hand.html">
-<link rel="stylesheet" href="lib.css">
+<link rel="stylesheet" href="lib.css?v=2">
 </head>
 <body>
 <a class="back" href="/codevember.html">← Codevember</a>
@@ -14,7 +14,7 @@
 // The words "BY HAND" filled in by two pen passes, the way a pen plotter draws:
 // pink hatching one way, blue the other. Where they cross you get the third colour.
 // Type a word and press Enter to plot your own.
-import { setup, paper, print, credit, makePlate, fitSize, run, ease, INK, W, H, DISPLAY, TEXT, font } from './lib.js';
+import { setup, paper, print, credit, makePlate, fitSize, run, ease, INK, W, H, DISPLAY, TEXT, font } from './lib.js?v=2';
 
 const k = await setup();
 const LOOP = 10;
