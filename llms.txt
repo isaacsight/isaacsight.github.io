@@ -22,6 +22,7 @@
 - [Music](https://isaacsight.com/music.html): three original songs with players and cover art
 
 ## Interactive work and live brand worlds
+- [Codevember](https://isaacsight.com/codevember.html): Codevember 2026: five two-ink pieces made in code by AI coding agents under Isaac's studio rules. Riso Press turns any photo into a pink and blue risograph print; Fold is a poster that only reads unfolded; Payday stamps a paycheck below zero; By Hand plots words like a pen plotter; Out of Line slips two plates out of register.
 - [SOLA](https://isaacsight.com/projects/sola.html): SOLA: a fictional sunscreen brand whose home is a live, risograph-printed map of the sun on the Los Angeles coast, with a character that runs on the real sun and reels made from the day's readings. A concept by Isaac Hernandez.
 - [YOAKE](https://isaacsight.com/projects/yoake.html): YOAKE (夜明け): a clay convenience store in Tokyo that runs on real Tokyo time, weather and season. Every package on the shelves is designed. An interactive concept by Isaac Hernandez, built in three.js with fal-generated props and Blender-baked light.
 - [Shallows](https://isaacsight.com/projects/shallows.html): Shallows (浅瀬): a playable clay tide pool from Japan's Izu Peninsula. Five real shallow-water species with steering behaviors, collision, and a field guide. An interactive concept by Isaac Hernandez, built in three.js with fal-generated clay models.

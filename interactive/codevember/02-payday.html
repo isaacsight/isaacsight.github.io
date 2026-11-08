@@ -1,0 +1,128 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Payday — Codevember — Isaac Hernandez</title>
+<link rel="canonical" href="https://isaacsight.com/interactive/codevember/02-payday.html">
+<link rel="stylesheet" href="lib.css">
+</head>
+<body>
+<a class="back" href="/codevember.html">← Codevember</a>
+<script type="module">
+// 02 · PAYDAY
+// A paycheck set in blue. Bills land on it as pink stamps, one per beat,
+// and the balance drops each time a stamp hits. Click to start over.
+import { setup, paper, print, credit, makePlate, fitSize, run, ease, INK, W, H, DISPLAY, TEXT, font } from './lib.js';
+
+const k = await setup();
+const LOOP = 12;
+const PAY = 2400;
+
+// [time it lands, label, amount, x, rotation in degrees]. Each stamp sits on its own ledger row.
+const BILLS = [
+  [1.6, 'RENT', 1650, 640, -7],
+  [2.9, 'PHONE', 85, 420, 5],
+  [4.2, 'INSURANCE', 410, 660, -4],
+  [5.5, 'GROCERIES', 240, 400, 7],
+  [6.8, 'STREAMING', 70, 690, -8],
+];
+const FINAL = 8.6;
+
+const money = (n) => (n < 0 ? '−$' : '$') + Math.abs(n).toLocaleString('en-US', { minimumFractionDigits: 2 });
+
+const titleSize = fitSize(k.ctx, DISPLAY, ['PAYDAY'], W - 140);
+const amountSize = fitSize(k.ctx, DISPLAY, ['−$2,400.00'], W - 140);
+
+const pinkP = makePlate(), blueP = makePlate();
+const pg = pinkP.getContext('2d'), bg = blueP.getContext('2d');
+
+function stamp(g, label, sub, x, y, rot, scale, size) {
+  g.save();
+  g.translate(x, y);
+  g.rotate((rot * Math.PI) / 180);
+  g.scale(scale, scale);
+  g.font = font(DISPLAY, size);
+  const w = g.measureText(label).width;
+  const subSize = Math.round(size * 0.36);
+  const h = sub ? size * 1.55 : size * 1.0;
+  const pad = size * 0.28;
+  g.lineWidth = Math.max(6, size * 0.07);
+  g.strokeStyle = INK.pink;
+  g.fillStyle = INK.pink;
+  g.strokeRect(-w / 2 - pad, -h / 2 - pad * 0.6, w + pad * 2, h + pad * 1.2);
+  g.textAlign = 'center';
+  g.textBaseline = 'middle';
+  g.fillText(label, 0, sub ? -size * 0.14 : size * 0.04);
+  if (sub) {
+    g.font = font(TEXT, subSize);
+    g.fillText(sub, 0, size * 0.48);
+  }
+  g.restore();
+}
+
+function render(t) {
+  // Balance only changes on the beat a stamp lands.
+  let bal = PAY;
+  const landed = BILLS.filter((b) => t >= b[0]);
+  for (const b of landed) bal -= b[2];
+
+  bg.clearRect(0, 0, W, H);
+  pg.clearRect(0, 0, W, H);
+
+  // Blue plate: the paycheck.
+  bg.fillStyle = INK.blue;
+  bg.font = font(DISPLAY, titleSize);
+  bg.letterSpacing = `${-titleSize * 0.02}px`;
+  const titleBase = 70 + titleSize * 0.76;
+  const amountBase = titleBase + 50 + amountSize * 0.76;
+  bg.fillText('PAYDAY', 66, titleBase);
+  bg.letterSpacing = '0px';
+  if (t >= 0.3) {
+    bg.font = font(DISPLAY, amountSize);
+    bg.fillText(money(bal), 66, amountBase);
+  }
+  // Ledger rows, one per landed bill.
+  bg.font = font(TEXT, 34);
+  const ledgerTop = amountBase + 130;
+  bg.fillRect(66, ledgerTop - 50, W - 132, 3);
+  landed.forEach((b, i) => {
+    const y = ledgerTop + i * 64;
+    bg.textAlign = 'left';
+    bg.fillText(b[1].charAt(0) + b[1].slice(1).toLowerCase(), 66, y);
+    bg.textAlign = 'right';
+    bg.fillText('−' + b[2].toLocaleString('en-US', { minimumFractionDigits: 2 }), W - 66, y);
+    bg.fillRect(66, y + 22, W - 132, 1.5);
+  });
+  bg.textAlign = 'left';
+
+  // Pink plate: the stamps, each one thuds in then holds.
+  landed.forEach(([at, label, amt, x, rot], i) => {
+    const s = 1 + 0.35 * (1 - ease((t - at) / 0.12));
+    stamp(pg, label, '−' + money(amt).slice(1), x, ledgerTop + i * 64 - 12, rot, s, 64);
+  });
+  if (t >= FINAL) {
+    const s = 1 + 0.35 * (1 - ease((t - FINAL) / 0.14));
+    pg.save();
+    pg.translate(W / 2, ledgerTop + 5 * 64 + 95);
+    pg.rotate((-4 * Math.PI) / 180);
+    pg.scale(s, s);
+    pg.fillStyle = INK.pink;
+    pg.font = font(DISPLAY, 128);
+    pg.textAlign = 'center';
+    pg.fillText('SEE YOU IN', 0, 0);
+    pg.fillText('14 DAYS.', 0, 120);
+    pg.restore();
+  }
+
+  paper(k);
+  print(k, blueP);
+  print(k, pinkP, 3, -2); // a hair out of register, like a real two-pass print
+  credit(k, 'Every bill lands on the beat.', '02');
+}
+
+k.c.addEventListener('pointerdown', () => k.restart());
+run(k, LOOP, render, '02-payday');
+</script>
+</body>
+</html>

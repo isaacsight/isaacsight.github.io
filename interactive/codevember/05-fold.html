@@ -1,0 +1,159 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Fold — Codevember — Isaac Hernandez</title>
+<link rel="canonical" href="https://isaacsight.com/interactive/codevember/05-fold.html">
+<link rel="stylesheet" href="lib.css">
+</head>
+<body>
+<a class="back" href="/codevember.html">← Codevember</a>
+<script type="module">
+// 05 · FOLD
+// A two-ink poster folded into four panels. It unfolds one panel at a time,
+// and the line only reads once it is fully open. Drag down to unfold it yourself.
+import { setup, makePlate, fitSize, run, credit, INK, W, H, DISPLAY, font } from './lib.js';
+
+const k = await setup();
+const { ctx } = k;
+const LOOP = 10;
+const TABLE = '#e4ddce';      // the surface the poster sits on
+const BACK = '#ebe4d6';       // the unprinted back of the sheet
+
+// Poster geometry: four panels, hinged along their top edges.
+const PW = 900, PH = 1040, PX = (W - PW) / 2, PY = 76;
+const PANELS = 4, SH = PH / PANELS;
+
+// --- Print the poster once: paper, a blue disc, pink type over it.
+const front = makePlate(PW, PH);
+{
+  const g = front.getContext('2d');
+  g.fillStyle = INK.paper;
+  g.fillRect(0, 0, PW, PH);
+  g.globalCompositeOperation = 'multiply';
+  g.globalAlpha = 0.55;
+  g.drawImage(k.grain, 0, 0, W, H);
+  g.globalAlpha = 0.94;
+
+  const blue = makePlate(PW, PH), bg = blue.getContext('2d');
+  bg.fillStyle = INK.blue;
+  bg.beginPath();
+  bg.arc(PW * 0.66, PH * 0.6, 300, 0, Math.PI * 2);
+  bg.fill();
+
+  const LINES = ['SOME', 'THINGS', 'ONLY', 'READ', 'OPEN.'];
+  const pink = makePlate(PW, PH), pg = pink.getContext('2d');
+  const size = Math.min(fitSize(pg, DISPLAY, LINES, PW - 110), Math.floor(PH / (LINES.length * 0.86 + 0.2)));
+  pg.fillStyle = INK.pink;
+  pg.font = font(DISPLAY, size);
+  pg.letterSpacing = `${-size * 0.02}px`;
+  LINES.forEach((l, i) => pg.fillText(l, 50, 40 + size * 0.78 + i * size * 0.86));
+
+  g.drawImage(blue, 0, 0);
+  g.drawImage(pink, 4, -3); // a hair out of register
+}
+
+// --- The back of each panel: flat paper, with a faint show-through of the print.
+const back = makePlate(PW, PH);
+{
+  const g = back.getContext('2d');
+  g.fillStyle = BACK;
+  g.fillRect(0, 0, PW, PH);
+  g.globalCompositeOperation = 'multiply';
+  g.globalAlpha = 0.5;
+  g.drawImage(k.grain, 0, 0, W, H);
+  g.globalAlpha = 0.05;
+  for (let i = 0; i < PANELS; i++) {
+    // Each panel's back shows its own print faintly, mirrored, like ink through thin paper.
+    g.save();
+    g.translate(0, (i + 1) * SH);
+    g.scale(1, -1);
+    g.drawImage(front, 0, i * SH, PW, SH, 0, 0, PW, SH);
+    g.restore();
+  }
+}
+
+// Unfold progress: 0 = folded (only panel 0 shows), 3 = fully open.
+const inout = (x) => (x < 0.5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2);
+const OPEN = [[0.7, 2.0], [2.3, 3.6], [3.9, 5.2]];     // each panel's unfold window
+const SHUT = [[8.5, 8.95], [8.95, 9.4], [9.4, 9.85]];  // fold back up, last panel first
+function progressAt(t) {
+  let p = 0;
+  OPEN.forEach(([a, b]) => { p += inout(Math.min(Math.max((t - a) / (b - a), 0), 1)); });
+  SHUT.forEach(([a, b]) => { p -= inout(Math.min(Math.max((t - a) / (b - a), 0), 1)); });
+  return p;
+}
+
+// Drag down to unfold, up to fold.
+let drag = null, held = 0;
+const toY = (e) => { const r = k.c.getBoundingClientRect(); return (e.clientY - r.top) * (H / r.height); };
+k.c.addEventListener('pointerdown', (e) => { drag = { y: toY(e), p: lastP }; k.c.setPointerCapture(e.pointerId); });
+k.c.addEventListener('pointermove', (e) => { if (drag) held = Math.min(Math.max(drag.p + (toY(e) - drag.y) / SH, 0), 3); });
+k.c.addEventListener('pointerup', () => { drag = null; held >= 2.9 ? k.restart(5.4) : k.restart(0); });
+let lastP = 0;
+
+function strip(src, i, y, h, flip, shade) {
+  if (h < 0.5) return;
+  ctx.save();
+  if (flip) {
+    ctx.translate(0, y + h);
+    ctx.scale(1, -1);
+    ctx.drawImage(src, 0, i * SH, PW, SH, PX, 0, PW, h);
+  } else {
+    ctx.drawImage(src, 0, i * SH, PW, SH, PX, y, PW, h);
+  }
+  ctx.restore();
+  if (shade > 0.01) {
+    // Turning away from the light: a flat darker tone of the same paper, no gradient.
+    ctx.save();
+    ctx.globalCompositeOperation = 'multiply';
+    ctx.fillStyle = `rgba(150,135,110,${shade.toFixed(3)})`;
+    ctx.fillRect(PX, y, PW, h);
+    ctx.restore();
+  }
+}
+
+function render(t) {
+  const p = drag ? held : progressAt(t);
+  lastP = p;
+
+  ctx.globalCompositeOperation = 'source-over';
+  ctx.globalAlpha = 1;
+  ctx.fillStyle = TABLE;
+  ctx.fillRect(0, 0, W, H);
+  ctx.globalCompositeOperation = 'multiply';
+  ctx.globalAlpha = 0.5;
+  ctx.drawImage(k.grain, 0, 0, W, H);
+  ctx.globalAlpha = 1;
+  ctx.globalCompositeOperation = 'source-over';
+
+  // Panel 0 is always flat.
+  strip(front, 0, PY, SH, false, 0);
+  const done = Math.floor(p);
+  for (let i = 1; i <= done && i < PANELS; i++) strip(front, i, PY + i * SH, SH, false, 0);
+
+  // The next panel lies folded over the last open one, back up, until it swings
+  // down from 180° to 0°. The panels after it ride along underneath.
+  const i = done + 1, f = p - done;
+  if (i < PANELS) {
+    const hinge = PY + i * SH;
+    const c = Math.cos(Math.PI * (1 - f));
+    if (c < 0) strip(back, i, hinge - SH * -c, SH * -c, true, 0.18 * (1 + c));
+    else strip(front, i, hinge, SH * c, false, 0.22 * (1 - c));
+  }
+
+  // Creases where the sheet has been folded.
+  ctx.save();
+  ctx.globalCompositeOperation = 'multiply';
+  ctx.fillStyle = 'rgba(140,125,100,.35)';
+  for (let j = 1; j <= done && j < PANELS; j++) ctx.fillRect(PX, PY + j * SH - 1, PW, 2);
+  ctx.restore();
+
+  credit(k, 'Some lines only read open.', '05');
+}
+
+run(k, LOOP, render, '05-fold');
+</script>
+</body>
+</html>

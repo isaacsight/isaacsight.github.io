@@ -1,0 +1,187 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>By Hand — Codevember — Isaac Hernandez</title>
+<link rel="canonical" href="https://isaacsight.com/interactive/codevember/03-by-hand.html">
+<link rel="stylesheet" href="lib.css">
+</head>
+<body>
+<a class="back" href="/codevember.html">← Codevember</a>
+<script type="module">
+// 03 · BY HAND
+// The words "BY HAND" filled in by two pen passes, the way a pen plotter draws:
+// pink hatching one way, blue the other. Where they cross you get the third colour.
+// Type a word and press Enter to plot your own.
+import { setup, paper, print, credit, makePlate, fitSize, run, ease, INK, W, H, DISPLAY, TEXT, font } from './lib.js';
+
+const k = await setup();
+const LOOP = 10;
+const PASS = 3.4;          // seconds per pen pass
+const PINK_AT = 0.2, BLUE_AT = PINK_AT + PASS, LINE_AT = BLUE_AT + PASS + 0.3;
+const SPACING = 9;
+const PEN = 3.4;
+
+let word = 'BY HAND';
+let plan;
+
+function buildPlan(text) {
+  const lines = text.trim().split(/\s+/);
+  const size = Math.min(fitSize(k.ctx, DISPLAY, lines, W - 140), 560);
+  const lead = size * 0.84;
+  const mask = makePlate();
+  const m = mask.getContext('2d', { willReadFrequently: true });
+  m.font = font(DISPLAY, size);
+  m.letterSpacing = `${-size * 0.015}px`;
+  const blockH = lead * (lines.length - 1) + size * 0.72;
+  const top = 90 + (860 - blockH) / 2 + size * 0.72;
+  lines.forEach((l, i) => m.fillText(l, 70, top + i * lead));
+  const alpha = m.getImageData(0, 0, W, H).data;
+  const inside = (x, y) => {
+    x |= 0; y |= 0;
+    return x >= 0 && y >= 0 && x < W && y < H && alpha[(y * W + x) * 4 + 3] > 128;
+  };
+  return {
+    pink: hatch(inside, Math.PI / 4, 0),
+    blue: hatch(inside, -Math.PI / 4, SPACING / 2),
+  };
+}
+
+// Cut parallel lines at an angle into runs that sit inside the letters.
+// Lines alternate direction so the pen travels like a real plotter.
+function hatch(inside, a, shift) {
+  const dx = Math.cos(a), dy = Math.sin(a), nx = -dy, ny = dx;
+  const diag = Math.hypot(W, H);
+  const segs = [];
+  let flip = false;
+  for (let o = -diag + shift; o < diag; o += SPACING) {
+    const runs = [];
+    let start = null;
+    for (let s = -diag; s <= diag; s += 2) {
+      const x = W / 2 + nx * o + dx * s, y = H / 2 + ny * o + dy * s;
+      const hit = inside(x, y);
+      if (hit && !start) start = [x, y];
+      if (!hit && start) {
+        if (Math.hypot(x - start[0], y - start[1]) > 4) runs.push([start, [x, y]]);
+        start = null;
+      }
+    }
+    if (!runs.length) continue;
+    if (flip) runs.reverse().forEach((r) => r.reverse());
+    flip = !flip;
+    segs.push(...runs);
+  }
+  let total = 0;
+  for (const s of segs) { s.len = Math.hypot(s[1][0] - s[0][0], s[1][1] - s[0][1]); s.at = total; total += s.len; }
+  return { segs, total };
+}
+
+const pinkP = makePlate(), blueP = makePlate();
+const state = { pink: 0, blue: 0 };
+let lastT = -1;
+
+// Draw the pen path from what is already on the plate up to `to`. Returns the pen tip.
+function drawTo(plate, pass, color, key, to) {
+  const g = plate.getContext('2d');
+  g.strokeStyle = color;
+  g.lineWidth = PEN;
+  g.lineCap = 'round';
+  const from = state[key];
+  let tip = null;
+  g.beginPath();
+  for (const s of pass.segs) {
+    if (s.at + s.len <= from) continue;
+    if (s.at >= to) break;
+    const a = Math.max(0, (from - s.at) / s.len), b = Math.min(1, (to - s.at) / s.len);
+    const x0 = s[0][0] + (s[1][0] - s[0][0]) * a, y0 = s[0][1] + (s[1][1] - s[0][1]) * a;
+    const x1 = s[0][0] + (s[1][0] - s[0][0]) * b, y1 = s[0][1] + (s[1][1] - s[0][1]) * b;
+    g.moveTo(x0, y0);
+    g.lineTo(x1, y1);
+    tip = [x1, y1];
+  }
+  g.stroke();
+  state[key] = Math.max(from, to);
+  return tip;
+}
+
+function reset() {
+  pinkP.getContext('2d').clearRect(0, 0, W, H);
+  blueP.getContext('2d').clearRect(0, 0, W, H);
+  state.pink = state.blue = 0;
+}
+
+function render(t) {
+  if (t < lastT) reset();
+  lastT = t;
+  const pp = Math.min(Math.max((t - PINK_AT) / PASS, 0), 1);
+  const bp = Math.min(Math.max((t - BLUE_AT) / PASS, 0), 1);
+  // Draw each pass up to where the pen should be; show the pen only while it is moving.
+  const pinkAt = pp > 0 ? drawTo(pinkP, plan.pink, INK.pink, 'pink', pp * plan.pink.total) : null;
+  const blueAt = bp > 0 ? drawTo(blueP, plan.blue, INK.blue, 'blue', bp * plan.blue.total) : null;
+  const pinkTip = pp < 1 ? pinkAt : null;
+  const blueTip = bp < 1 ? blueAt : null;
+
+  paper(k);
+  print(k, pinkP);
+  print(k, blueP);
+
+  const { ctx } = k;
+  // The pen itself: a ring at the tip while it draws.
+  for (const [tip, color] of [[pinkTip, INK.pink], [blueTip, INK.blue]]) {
+    if (!tip) continue;
+    ctx.save();
+    ctx.globalCompositeOperation = 'multiply';
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.arc(tip[0], tip[1], 11, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  // The answer lands once both passes are done, then holds.
+  if (t >= LINE_AT) {
+    const e = ease((t - LINE_AT) / 0.14);
+    ctx.save();
+    ctx.globalCompositeOperation = 'multiply';
+    ctx.fillStyle = INK.blue;
+    ctx.font = font(DISPLAY, 96);
+    ctx.fillText('(drawn by code)', 70, 1030 + (1 - e) * 30);
+    ctx.restore();
+  }
+
+  if (!k.recording && typed) {
+    ctx.save();
+    ctx.fillStyle = INK.blue;
+    ctx.font = font(TEXT, 26);
+    ctx.textAlign = 'right';
+    ctx.fillText('next: ' + typed + '▍  (Enter to plot)', W - 64, 70);
+    ctx.restore();
+  }
+  credit(k, 'Two pens, two angles, one third colour.', '03');
+}
+
+// Type a new word, Enter to plot it.
+let typed = '';
+addEventListener('keydown', (e) => {
+  if (e.key === 'Enter' && typed.trim()) {
+    word = typed.trim().toUpperCase().slice(0, 16);
+    typed = '';
+    plan = buildPlan(word);
+    reset();
+    lastT = -1;
+    k.restart();
+  } else if (e.key === 'Backspace') {
+    typed = typed.slice(0, -1);
+  } else if (/^[a-z ]$/i.test(e.key) && !(e.key === 'r' && !typed) && typed.length < 16) {
+    typed += e.key.toUpperCase();
+  }
+  window.__typing = typed.length > 0;
+});
+
+plan = buildPlan(word);
+run(k, LOOP, render, '03-by-hand');
+</script>
+</body>
+</html>
