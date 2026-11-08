@@ -99,15 +99,14 @@ export function print(k, plate, dx = 0, dy = 0) {
 }
 
 // Credit line, set in blue at the foot of the sheet.
-export function credit(k, left, num) {
+export function credit(k, left, num, color = INK.blue, mode = 'multiply') {
   const { ctx } = k;
   ctx.save();
-  ctx.globalCompositeOperation = 'multiply';
-  ctx.fillStyle = INK.blue;
+  ctx.globalCompositeOperation = mode;
+  ctx.fillStyle = color;
   ctx.font = font(TEXT, 26);
   ctx.textBaseline = 'alphabetic';
   ctx.fillText(left, 64, H - 92);
-  ctx.fillStyle = INK.blue;
   ctx.font = font(TEXT, 20);
   ctx.fillText('Isaac Hernandez · code written with AI under my direction', 64, H - 56);
   ctx.textAlign = 'right';

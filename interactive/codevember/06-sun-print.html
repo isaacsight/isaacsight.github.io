@@ -1,0 +1,192 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Sun Print — Codevember — Isaac Hernandez</title>
+<link rel="canonical" href="https://isaacsight.com/interactive/codevember/06-sun-print.html">
+<link rel="stylesheet" href="lib.css">
+</head>
+<body>
+<a class="back" href="/codevember.html">← Codevember</a>
+<script type="module">
+// 06 · SUN PRINT
+// A cyanotype. A fern and cut-paper letters are laid on a brushed sheet and left
+// in the sun. Where the light reaches, the chemistry turns. Lift them off, rinse,
+// and the shadows come up white on Prussian blue. Click to lay a new fern.
+import { setup, credit, makePlate, fitSize, run, ease, rng, W, H, DISPLAY, font } from './lib.js';
+
+const k = await setup();
+const { ctx } = k;
+const LOOP = 12;
+
+const PAPER = [244, 241, 232];        // cotton rag, uncoated
+const WET = [214, 216, 170];          // fresh coating, pale yellow-green
+const BURNT = [104, 118, 116];        // exposed, before the rinse: grey-green bronze
+const BLUE = [22, 56, 120];           // rinsed: Prussian blue
+const SHADE = [228, 235, 238];        // rinsed shadow: paper with a breath of blue
+const KRAFT = '#c7a273', FERN = '#6f7a3c';
+
+const T = { place: [0.6, 2.2], expose: [2.4, 7.0], lift: [7.3, 8.0], rinse: [8.2, 9.4] };
+const mix = (a, b, f) => a.map((v, i) => Math.round(v + (b[i] - v) * f));
+const rgb = (c) => `rgb(${c[0]},${c[1]},${c[2]})`;
+const clamp01 = (x) => Math.min(Math.max(x, 0), 1);
+const phase = (t, [a, b]) => clamp01((t - a) / (b - a));
+
+// The brushed coating: a rectangle with ragged, dragged edges.
+const coat = makePlate();
+{
+  const g = coat.getContext('2d'), r = rng(3);
+  g.fillStyle = '#000';
+  g.beginPath();
+  const x0 = 70, x1 = W - 70, y0 = 70, y1 = 1150, step = 6;
+  g.moveTo(x0, y0);
+  for (let x = x0; x <= x1; x += step) g.lineTo(x, y0 + (r() - 0.5) * 14);
+  for (let y = y0; y <= y1; y += step) g.lineTo(x1 + (r() - 0.5) * 18 + Math.sin(y / 40) * 6, y);
+  for (let x = x1; x >= x0; x -= step) g.lineTo(x, y1 + (r() - 0.5) * 14);
+  for (let y = y1; y >= y0; y -= step) g.lineTo(x0 + (r() - 0.5) * 18 + Math.sin(y / 33) * 6, y);
+  g.fill();
+  // a few dry-brush streaks off the edge
+  g.lineCap = 'round';
+  for (let i = 0; i < 12; i++) {
+    const y = y0 + r() * (y1 - y0), side = r() < 0.5, len = 8 + r() * 26;
+    // each streak thins out as the brush runs dry
+    for (let j = 0; j < 4; j++) {
+      g.lineWidth = (1 + r() * 3) * (1 - j / 4);
+      g.beginPath();
+      const sx = side ? x0 + 4 - (len * j) / 4 : x1 - 4 + (len * j) / 4;
+      g.moveTo(sx, y + j * 0.6);
+      g.lineTo(side ? sx - len / 4 : sx + len / 4, y + (j + 1) * 0.6);
+      g.stroke();
+    }
+  }
+}
+
+// A fern drawn in code: a curving stem with alternating lobed pinnae.
+function fern(g, seed, x, y, len, angle) {
+  const r = rng(seed);
+  g.save();
+  g.translate(x, y);
+  g.rotate(angle);
+  const steps = 26;
+  let px = 0, py = 0, a = 0;
+  for (let i = 0; i < steps; i++) {
+    const f = i / steps;
+    const seg = len / steps;
+    a += 0.025 + (r() - 0.5) * 0.01;
+    const nx = px + Math.sin(a) * seg, ny = py - Math.cos(a) * seg;
+    g.lineWidth = 7 * (1 - f) + 1.5;
+    g.beginPath(); g.moveTo(px, py); g.lineTo(nx, ny); g.stroke();
+    // pinnae: longest in the lower middle, short at the tip
+    const pl = len * 0.2 * Math.sin(Math.PI * Math.min(1, f * 1.15 + 0.08)) * (0.85 + r() * 0.3);
+    for (const side of [-1, 1]) {
+      g.save();
+      g.translate(nx, ny);
+      g.rotate(a + side * (1.05 - f * 0.35));
+      const lobes = 7;
+      for (let j = 0; j < lobes; j++) {
+        const lf = j / lobes, ly = -pl * lf, lw = pl * 0.16 * (1 - lf * 0.75);
+        g.beginPath();
+        g.ellipse(0, ly - pl / lobes / 2, lw, pl / lobes * 0.75, 0, 0, Math.PI * 2);
+        g.fill();
+      }
+      g.lineWidth = 2;
+      g.beginPath(); g.moveTo(0, 0); g.lineTo(0, -pl); g.stroke();
+      g.restore();
+    }
+    px = nx; py = ny;
+  }
+  g.restore();
+}
+
+let word = 'SLOW LIGHT', seed = 11, scene;
+function build() {
+  const r = rng(seed);
+  const ferns = [
+    { s: seed, x: 250 + r() * 80, y: 1120, len: 470 + r() * 70, a: -0.3 + r() * 0.15 },
+    { s: seed + 5, x: 780 + r() * 70, y: 1130, len: 400 + r() * 80, a: 0.2 + r() * 0.25 },
+  ];
+  const lines = word.trim().toUpperCase().split(/\s+/);
+  const size = Math.min(fitSize(ctx, DISPLAY, lines, W - 220), 300);
+  // Shadow mask (white = blocks light). Slightly soft, like a contact print.
+  const mask = makePlate(), m = mask.getContext('2d');
+  m.filter = 'blur(1.6px)';
+  m.fillStyle = m.strokeStyle = '#fff';
+  for (const f of ferns) fern(m, f.s, f.x, f.y, f.len, f.a);
+  m.font = font(DISPLAY, size);
+  lines.forEach((l, i) => m.fillText(l, 110, 160 + size * 0.78 + i * size * 0.9));
+  // The objects themselves, for while they sit on the sheet.
+  const props = makePlate(), p = props.getContext('2d');
+  p.fillStyle = p.strokeStyle = FERN;
+  for (const f of ferns) fern(p, f.s, f.x, f.y, f.len, f.a);
+  p.fillStyle = KRAFT;
+  p.font = font(DISPLAY, size);
+  lines.forEach((l, i) => p.fillText(l, 110 + 3, 160 + size * 0.78 + i * size * 0.9 + 4));
+  scene = { mask, props };
+}
+build();
+
+// Re-usable layers so each frame is just a few fills.
+const coatLayer = makePlate(), shadeLayer = makePlate();
+
+function render(t) {
+  const ex = phase(t, T.expose), lift = ease(phase(t, T.lift)), rinse = ease(phase(t, T.rinse));
+  // Light side of the sheet: wet → burnt → blue.
+  const lit = rinse > 0 ? mix(BURNT, BLUE, rinse) : mix(WET, BURNT, ex);
+  // Shadow side: stays wet, then rinses to white.
+  const shade = mix(WET, SHADE, rinse);
+
+  ctx.globalCompositeOperation = 'source-over';
+  ctx.fillStyle = rgb(PAPER);
+  ctx.fillRect(0, 0, W, H);
+
+  const c = coatLayer.getContext('2d');
+  c.globalCompositeOperation = 'source-over';
+  c.clearRect(0, 0, W, H);
+  c.fillStyle = rgb(lit);
+  c.fillRect(0, 0, W, H);
+  // shadows, cut from the mask
+  const s = shadeLayer.getContext('2d');
+  s.globalCompositeOperation = 'source-over';
+  s.clearRect(0, 0, W, H);
+  s.fillStyle = rgb(shade);
+  s.fillRect(0, 0, W, H);
+  s.globalCompositeOperation = 'destination-in';
+  s.drawImage(scene.mask, 0, 0);
+  c.drawImage(shadeLayer, 0, 0);
+  c.globalCompositeOperation = 'destination-in';
+  c.drawImage(coat, 0, 0);
+  ctx.drawImage(coatLayer, 0, 0);
+
+  // paper tooth over everything
+  ctx.globalCompositeOperation = 'multiply';
+  ctx.globalAlpha = 0.6;
+  ctx.drawImage(k.grain, 0, 0, W, H);
+  ctx.globalAlpha = 1;
+  ctx.globalCompositeOperation = 'source-over';
+
+  // The fern and letters: laid down, then lifted off.
+  const place = ease(phase(t, T.place));
+  if (place > 0 && lift < 1) {
+    ctx.save();
+    ctx.globalAlpha = place * (1 - lift);
+    ctx.drawImage(scene.props, 0, (1 - place) * -24 - lift * 60);
+    ctx.restore();
+  }
+  credit(k, 'Laid in the sun, lifted, rinsed.', '06', rgb(BLUE), 'source-over');
+}
+
+// Click to lay a new fern; type a word and press Enter to print it.
+let typed = '';
+k.c.addEventListener('pointerdown', () => { seed += 17; build(); k.restart(); });
+addEventListener('keydown', (e) => {
+  if (e.key === 'Enter' && typed.trim()) { word = typed.slice(0, 18); typed = ''; build(); k.restart(); }
+  else if (e.key === 'Backspace') typed = typed.slice(0, -1);
+  else if (/^[a-z ]$/i.test(e.key) && !(e.key === 'r' && !typed)) typed += e.key.toUpperCase();
+  window.__typing = typed.length > 0;
+});
+
+run(k, LOOP, render, '06-sun-print');
+</script>
+</body>
+</html>
