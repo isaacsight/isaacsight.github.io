@@ -1,7 +1,0 @@
-html, body { margin: 0; height: 100%; background: #e4ded1; }
-body { display: grid; place-items: center; overflow: hidden; }
-/* Size from CSS, not JS: on phones the full-size canvas would widen the page before JS could measure it. */
-canvas { display: block; width: min(100vw, 80dvh); height: auto; touch-action: none; cursor: grab; }
-canvas:active { cursor: grabbing; }
-.back { position: fixed; top: 12px; left: 16px; z-index: 2; font: 400 14px/1 Text, Arial, sans-serif; color: #3d63b8; text-decoration: none; padding: 6px 0; }
-.back:hover { text-decoration: underline; }
