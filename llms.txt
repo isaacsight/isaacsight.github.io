@@ -43,7 +43,7 @@
 - [TEMPER](https://isaacsight.com/projects/temper.html): A workwear label identity carried entirely by what's sewn on: a woven label, a stamped button, a kraft hangtag, and a line about wearing things in. An independent concept study in brand identity · labels & trims · lookbook.
 
 ## Reels
-- [Reels](https://isaacsight.com/reels.html): One prompt, every model: a 100-second reel that takes a single sentence through text-to-image, edit, image-to-video, text-to-audio, upscale and re-render on fal.ai. By Isaac Hernandez.
+- [Reels](https://isaacsight.com/reels.html): Secondhand Morning: a 60-second original film in which a narrator that has never seen a morning pictures one from figures of speech taken literally; written, directed and cut by Claude Fable 5.2, produced by Isaac Hernandez, made on Higgsfield. Also: One prompt, every model: a 100-second reel that takes a single sentence through text-to-image, edit, image-to-video, text-to-audio, upscale and re-render on fal.ai. By Isaac Hernandez.
 
 ## Optional
 - [All campaign concepts](https://isaacsight.com/campaigns.html): Thirty-five independent campaign studies spanning music, apparel, hospitality, nonprofits, food, florals, fitness and design, twenty-three with full case studies. Creative direction and design by Isaac Hernandez with AI-assisted imagery.
