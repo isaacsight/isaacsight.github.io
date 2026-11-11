@@ -216,7 +216,7 @@ function frame(now) {
     const s = shape(th, t);
     th.path.setAttribute('d', s.d); th.shadow.setAttribute('d', s.d);
     th.path.style.visibility = th.shadow.style.visibility = s.started ? 'visible' : 'hidden';
-    if (s.arrived && !th.pinned) { th.pinned = true; pinAt(th.b, th.pins); tagEls[th.to].classList.add('show'); if (!still && freezeAt == null) pluck(th.i); }
+    if (s.arrived && !th.pinned) { th.pinned = true; pinAt(th.b, th.pins); tagEls[th.to].classList.add('show'); if (!still && freezeAt == null) pluck(th); }
     if (t < th.delay + GROW + SETTLE) busy = true;
   }
   raf = busy && !still && freezeAt == null ? requestAnimationFrame(frame) : 0;
@@ -224,6 +224,7 @@ function frame(now) {
 
 function pick(k, quiet) {
   if (k === current) k = null;
+  if (!k && current && !quiet) putBack();
   current = k; peeked = null;
   cancelAnimationFrame(raf); live = [];
   threads.textContent = ''; rows.textContent = '';
@@ -241,7 +242,7 @@ function pick(k, quiet) {
   const sh = el('g', { transform: 'translate(5 9)' }, threads), ln = el('g', {}, threads), pins = el('g', {}, threads);
   near.forEach(([o], i) => live.push({ a: me.pin, b: N[o].pin, to: o, i, delay: .12 + i * STAGGER, shadow: el('path', { class: 'thread-shadow' }, sh), path: el('path', { class: 'thread' }, ln), pins }));
   pinAt(me.pin, pins);
-  if (!quiet) thud();
+  if (!quiet) thud(k);
   t0 = performance.now(); frame(t0);
   $('title').textContent = me.name;
   $('lede').textContent = `Tied to ${near.length} other ${near.length === 1 ? 'thing' : 'things'} on the desk.`;
@@ -254,28 +255,76 @@ function pick(k, quiet) {
 }
 
 // ---- sound ---------------------------------------------------------------
-// A soft thud when something is picked up, and one plucked note per thread as it lands.
-// Notes step up a pentatonic scale, so a thing with more ties plays a longer run.
-let ac = null, soundOn = true;
-const SCALE = [0, 2, 4, 7, 9, 12, 14, 16];
-function audio() { if (!soundOn) return null; if (!ac) { const C = window.AudioContext || window.webkitAudioContext; if (!C) return null; ac = new C(); } if (ac.state === 'suspended') ac.resume(); return ac; }
-function pluck(i) {
-  const a = audio(); if (!a) return;
-  const f = 220 * Math.pow(2, SCALE[i % SCALE.length] / 12), t = a.currentTime;
-  const o = a.createOscillator(), g = a.createGain(), lp = a.createBiquadFilter();
-  o.type = 'triangle'; o.frequency.setValueAtTime(f, t);
-  lp.type = 'lowpass'; lp.frequency.setValueAtTime(2600, t); lp.frequency.exponentialRampToValueAtTime(500, t + .5);
-  g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(.11, t + .006); g.gain.exponentialRampToValueAtTime(.0008, t + .75);
-  o.connect(lp).connect(g).connect(a.destination); o.start(t); o.stop(t + .8);
+// Everything here is meant to sound like the things on the desk: a knuckle on wood when
+// something is picked up, a pin going in, and a real plucked string for each thread.
+// A longer thread plays a lower note, as a longer string would. Notes stay in C major
+// pentatonic, the key of SUNRISE.
+let ac = null, out = null, soundOn = true;
+const PENTA = [0, 2, 4, 7, 9];
+// thread length (in photo units) -> a note between A3 and E5, snapped to the scale
+function noteFor(len) {
+  const midi = 76 - Math.min(1, Math.max(0, (len - 110) / 620)) * 19;
+  let best = 60, gap = 99;
+  for (let o = 48; o <= 84; o += 12) for (const s of PENTA) { const g = Math.abs(o + s - midi); if (g < gap) { gap = g; best = o + s; } }
+  return 440 * Math.pow(2, (best - 69) / 12);
 }
-function thud() {
-  const a = audio(); if (!a) return;
-  const t = a.currentTime, o = a.createOscillator(), g = a.createGain();
-  o.type = 'sine'; o.frequency.setValueAtTime(130, t); o.frequency.exponentialRampToValueAtTime(52, t + .14);
-  g.gain.setValueAtTime(.16, t); g.gain.exponentialRampToValueAtTime(.0008, t + .22);
-  o.connect(g).connect(a.destination); o.start(t); o.stop(t + .25);
+// Karplus-Strong: a burst of noise fed round a short delay, losing its brightness each lap.
+const strings = new Map();
+function stringBuffer(ctx, freq) {
+  const key = ctx.sampleRate + ':' + freq.toFixed(2); if (strings.has(key)) return strings.get(key);
+  const sr = ctx.sampleRate, n = Math.round(sr / freq), len = Math.floor(sr * 1.6), d = new Float32Array(len);
+  let seed = Math.round(freq * 977) | 1; const rnd = () => ((seed = (seed * 16807) % 2147483647) / 2147483647) * 2 - 1;
+  for (let i = 0; i < n; i++) d[i] = rnd();
+  for (let pass = 0; pass < 3; pass++) for (let i = n - 1; i > 0; i--) d[i] = (d[i] + d[i - 1]) * .5;   // a soft fingertip, not a pick
+  const keep = .9935 - Math.min(.006, freq / 220000);
+  for (let i = n; i < len; i++) d[i] = (d[i - n] + d[i - n + 1]) * .5 * keep;
+  let peak = 0; for (let i = 0; i < len; i++) peak = Math.max(peak, Math.abs(d[i]));
+  for (let i = 0; i < len; i++) d[i] = d[i] / peak * Math.min(1, (len - i) / (sr * .08));
+  const b = ctx.createBuffer(1, len, sr); b.copyToChannel(d, 0); strings.set(key, b); return b;
 }
+function noise(ctx, secs) { const b = ctx.createBuffer(1, Math.ceil(ctx.sampleRate * secs), ctx.sampleRate), d = b.getChannelData(0); for (let i = 0; i < d.length; i++) d[i] = (Math.random() * 2 - 1) * (1 - i / d.length); return b; }
+function panTo(ctx, node, pan, dest) { if (ctx.createStereoPanner) { const p = ctx.createStereoPanner(); p.pan.value = pan; node.connect(p).connect(dest); } else node.connect(dest); }
+// One thread landing: the pin ticks in, then the string sounds.
+function sndPluck(ctx, dest, when, freq, pan) {
+  const s = ctx.createBufferSource(), g = ctx.createGain(), lp = ctx.createBiquadFilter();
+  s.buffer = stringBuffer(ctx, freq); lp.type = 'lowpass'; lp.frequency.value = 3400; g.gain.value = .2;
+  s.connect(lp).connect(g); panTo(ctx, g, pan, dest); s.start(when);
+  const t = ctx.createBufferSource(), tg = ctx.createGain(), hp = ctx.createBiquadFilter();
+  t.buffer = noise(ctx, .014); hp.type = 'highpass'; hp.frequency.value = 2600; tg.gain.value = .07;
+  t.connect(hp).connect(tg); panTo(ctx, tg, pan, dest); t.start(when);
+}
+// A knuckle on the desk: a short woody knock with a little weight under it.
+function sndKnock(ctx, dest, when, pan, low) {
+  const n = ctx.createBufferSource(), bp = ctx.createBiquadFilter(), ng = ctx.createGain();
+  n.buffer = noise(ctx, .05); bp.type = 'bandpass'; bp.frequency.value = low ? 300 : 440; bp.Q.value = 3.5; ng.gain.value = low ? .32 : .42;
+  n.connect(bp).connect(ng); panTo(ctx, ng, pan, dest); n.start(when);
+  const o = ctx.createOscillator(), og = ctx.createGain();
+  o.type = 'sine'; o.frequency.setValueAtTime(low ? 150 : 185, when); o.frequency.exponentialRampToValueAtTime(low ? 80 : 98, when + .09);
+  og.gain.setValueAtTime(low ? .12 : .16, when); og.gain.exponentialRampToValueAtTime(.0008, when + .13);
+  o.connect(og); panTo(ctx, og, pan, dest); o.start(when); o.stop(when + .15);
+}
+const panOf = x => (x / 880 - .5) * 1.1;
+function master(ctx) { const c = ctx.createDynamicsCompressor(), g = ctx.createGain(); c.threshold.value = -16; c.ratio.value = 3; c.attack.value = .004; c.release.value = .2; g.gain.value = 2.1; c.connect(g).connect(ctx.destination); return c; }
+function audio() {
+  if (!soundOn) return null;
+  if (!ac) { const C = window.AudioContext || window.webkitAudioContext; if (!C) return null; ac = new C(); out = master(ac); }
+  if (ac.state === 'suspended') ac.resume(); return ac;
+}
+const lenOf = th => Math.hypot(th.b[0] - th.a[0], th.b[1] - th.a[1]);
+function pluck(th) { const a = audio(); if (a) sndPluck(a, out, a.currentTime, noteFor(lenOf(th)), panOf(th.b[0])); }
+function thud(k) { const a = audio(); if (a) sndKnock(a, out, a.currentTime, panOf(N[k].pin[0]), false); }
+function putBack() { const a = audio(); if (a) sndKnock(a, out, a.currentTime, 0, true); }
 $('sound').addEventListener('click', e => { soundOn = !soundOn; e.currentTarget.textContent = soundOn ? 'Sound on' : 'Sound off'; e.currentTarget.setAttribute('aria-pressed', soundOn); });
+// For checking levels: render the whole sequence for one thing offline and return the samples.
+async function renderSound(k) {
+  const me = N[k], near = []; L.forEach(([a, b]) => { if (a === k || b === k) near.push(a === k ? b : a); });
+  near.sort((p, q) => Math.hypot(N[p].pin[0] - me.pin[0], N[p].pin[1] - me.pin[1]) - Math.hypot(N[q].pin[0] - me.pin[0], N[q].pin[1] - me.pin[1]));
+  const ctx = new OfflineAudioContext(2, 48000 * 3.4, 48000), dest = master(ctx);
+  sndKnock(ctx, dest, .05, panOf(me.pin[0]), false);
+  near.forEach((o, i) => sndPluck(ctx, dest, .05 + .12 + i * STAGGER + GROW, noteFor(Math.hypot(N[o].pin[0] - me.pin[0], N[o].pin[1] - me.pin[1])), panOf(N[o].pin[0])));
+  sndKnock(ctx, dest, 2.9, 0, true);
+  const buf = await ctx.startRendering(); return [Array.from(buf.getChannelData(0)), Array.from(buf.getChannelData(1))];
+}
 
 // ---- dust ----------------------------------------------------------------
 // Specks drifting through the bar of sun in the top left. They only show where the light is.
