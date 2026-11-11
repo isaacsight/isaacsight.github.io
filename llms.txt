@@ -18,6 +18,7 @@
 - [Approach](https://isaacsight.com/approach.html): how Isaac works, what he can be hired for and how AI fits in
 - [Studio Rules](https://isaacsight.com/rules.html): the rules his AI agents read before building: two riso inks, type first, no generated faces, three directions and a pick, his sign-off on every final
 - [Look up.](https://isaacsight.com/projects/specs-look-up.html): an unsolicited two-ink poster concept for Specs (not affiliated with Snap); artwork AI-assisted under his direction, type set in code
+- [The desk](https://isaacsight.com/interactive/desk/): an interactive self-portrait. Fourteen objects on a desk stand for fourteen of his interests (art direction, type, print, music, motion, code, AI direction, records, Los Angeles, Japan, handmade things, small shops, sun and light, attention); picking one up strings red thread to the others it is tied to, and each thread names a piece of his work. Directed by Isaac Hernandez; the photograph is AI-generated and the page was designed and coded with Claude Fable 5.2.
 - [Rules Off / Rules On](https://isaacsight.com/interactive/rules/): one brief built twice by an AI agent, with and without his studio rules, compared with a slider
 - [Music](https://isaacsight.com/music.html): three original songs with players and cover art
 

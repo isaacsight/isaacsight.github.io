@@ -1,0 +1,312 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The desk — Isaac Hernandez</title>
+<meta name="description" content="Fourteen things Isaac Hernandez keeps coming back to, laid out on a desk. Pick one up and see what it is tied to.">
+<link rel="canonical" href="https://isaacsight.com/interactive/desk/">
+<meta property="og:type" content="website">
+<meta property="og:title" content="The desk — Isaac Hernandez">
+<meta property="og:description" content="Fourteen things I keep coming back to, laid out on a desk. Pick one up and see what it is tied to.">
+<meta property="og:url" content="https://isaacsight.com/interactive/desk/">
+<meta property="og:image" content="https://isaacsight.com/assets/desk/og.jpg">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400&display=swap" rel="stylesheet">
+<style>
+  :root { --paper: #f3ecdf; --ink: #241a12; --soft: #6f6253; --thread: #c9382c; --rule: #d9cdb8; }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; background: var(--paper); color: var(--ink); }
+  body { font-family: 'Newsreader', Georgia, serif; min-height: 100dvh; -webkit-tap-highlight-color: transparent; }
+  main { display: grid; grid-template-columns: auto minmax(280px, 420px); gap: clamp(24px, 4vw, 64px); justify-content: center; align-items: center; min-height: 100dvh; padding: clamp(16px, 3vw, 40px); }
+  /* The stage is always 4:5 and sized in CSS, so hit areas, threads and dust scale with the photo. */
+  #stage { position: relative; width: min(92vw, 76dvh); aspect-ratio: 4 / 5; overflow: hidden; border-radius: 3px; background: #b48d62; box-shadow: 0 18px 40px -22px #3b2a1a99; touch-action: manipulation; }
+  #stage img, #stage svg, #stage canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+  #stage img { object-fit: cover; user-select: none; -webkit-user-drag: none; }
+  #dust { pointer-events: none; mix-blend-mode: screen; transition: opacity .5s ease; }
+  #stage.on #dust { opacity: 0; }
+  .hit { fill: transparent; cursor: pointer; outline: none; }
+  .hit:focus-visible { stroke: #fff; stroke-width: 3; stroke-dasharray: 7 7; }
+  #shade { opacity: 0; transition: opacity .5s cubic-bezier(.3,.7,.2,1); pointer-events: none; }
+  #stage.peek #shade { opacity: .45; transition-duration: .25s; }
+  #stage.on #shade { opacity: 1; }
+  .thread { fill: none; stroke: var(--thread); stroke-width: 3; stroke-linecap: round; }
+  .thread-shadow { fill: none; stroke: #2a160c; stroke-opacity: .34; stroke-width: 3.4; stroke-linecap: round; }
+  #threads { transition: opacity .18s ease; }
+  #threads.out { opacity: 0; }
+  .pin { transform-box: fill-box; transform-origin: center; animation: pop .28s cubic-bezier(.3,1.6,.5,1) both; }
+  .pin circle:first-child { fill: #d9b25a; stroke: #6b4a12; stroke-width: 1; }
+  .pin circle:last-child { fill: #fff3cf; }
+  @keyframes pop { from { transform: scale(0); } }
+  .tag rect { fill: var(--paper); stroke: #0002; stroke-width: 1; }
+  .tag text { font-family: 'DM Mono', ui-monospace, monospace; font-size: 17px; letter-spacing: .08em; text-transform: uppercase; fill: var(--ink); }
+  .tag { opacity: 0; transform: translateY(6px); transition: opacity .25s ease, transform .35s cubic-bezier(.3,.7,.2,1); pointer-events: none; }
+  .tag.show { opacity: 1; transform: none; }
+  .kicker { font-family: 'DM Mono', ui-monospace, monospace; font-size: 12px; letter-spacing: .1em; text-transform: uppercase; color: var(--soft); margin: 0 0 18px; }
+  h1 { font-weight: 400; font-size: clamp(34px, 4.2vw, 56px); line-height: 1.02; letter-spacing: -.02em; margin: 0 0 14px; }
+  h1 em { font-style: italic; }
+  #lede { font-size: 19px; line-height: 1.45; color: var(--soft); margin: 0 0 26px; max-width: 34ch; }
+  #rows { list-style: none; margin: 0; padding: 0; border-top: 1px solid var(--rule); }
+  #rows li { display: grid; grid-template-columns: 22px 1fr; gap: 10px; padding: 13px 0; border-bottom: 1px solid var(--rule); opacity: 0; transform: translateY(6px); animation: rise .4s ease forwards; }
+  #rows li::before { content: ''; width: 16px; height: 2px; background: var(--thread); margin-top: 12px; border-radius: 2px; }
+  #rows b { display: block; font-family: 'DM Mono', ui-monospace, monospace; font-weight: 500; font-size: 12px; letter-spacing: .1em; text-transform: uppercase; margin-bottom: 3px; transition: color .15s; }
+  #rows span { font-size: 18px; line-height: 1.35; }
+  #rows button { all: unset; cursor: pointer; display: block; }
+  #rows button:hover b, #rows button:focus-visible b { color: var(--thread); }
+  #rows button:focus-visible { outline: 2px solid var(--thread); outline-offset: 4px; }
+  .controls { display: flex; gap: 22px; margin-top: 20px; }
+  .controls button { all: unset; cursor: pointer; font-family: 'DM Mono', ui-monospace, monospace; font-size: 12px; letter-spacing: .1em; text-transform: uppercase; color: var(--soft); border-bottom: 1px solid currentColor; padding-bottom: 2px; }
+  .controls button:hover, .controls button:focus-visible { color: var(--ink); }
+  .kicker a { color: inherit; text-decoration: none; border-bottom: 1px solid var(--rule); }
+  .kicker a:hover, .kicker a:focus-visible { color: var(--ink); border-color: currentColor; }
+  .credit { font-family: 'DM Mono', ui-monospace, monospace; font-size: 11px; line-height: 1.6; letter-spacing: .04em; color: var(--soft); margin: 30px 0 0; max-width: 40ch; }
+  #reset { visibility: hidden; }
+  #reset.show { visibility: visible; }
+  @keyframes rise { to { opacity: 1; transform: none; } }
+  .still #rows li { animation: none; opacity: 1; transform: none; }
+  .still .tag, .still #shade { transition: none; }
+  .still .pin { animation: none; }
+  @media (max-width: 860px) {
+    main { grid-template-columns: 1fr; align-items: start; gap: 22px; padding: 0 0 32px; }
+    #stage { width: 100vw; border-radius: 0; box-shadow: none; }
+    aside { padding: 0 20px; }
+  }
+  @media (prefers-reduced-motion: reduce) { #rows li { animation: none; opacity: 1; transform: none; } .pin { animation: none; } .tag { transition: none; } }
+</style>
+</head>
+<body>
+<main>
+  <div id="stage">
+    <img src="desk-1000.jpg" srcset="desk-1000.jpg 1000w, desk-1792.jpg 1792w" sizes="(max-width: 860px) 100vw, 76dvh" width="1792" height="2240" decoding="async" alt="A wooden desk seen from above in morning light, with fourteen small objects laid out on it: a contact sheet, wooden type, an ink roller, a small synthesizer, a strip of film, a circuit board, an index card and stamp, a record, a postcard of palm trees, a lucky cat, clay and scissors, a matchbook and receipt, a prism and an hourglass.">
+    <canvas id="dust" aria-hidden="true"></canvas>
+    <svg id="over" viewBox="0 0 880 1100" aria-label="Objects on the desk">
+      <defs>
+        <radialGradient id="hole"><stop offset="0" stop-color="#000"/><stop offset=".68" stop-color="#000"/><stop offset="1" stop-color="#000" stop-opacity="0"/></radialGradient>
+        <mask id="m"><rect width="880" height="1100" fill="#fff"/><g id="holes"></g></mask>
+      </defs>
+      <rect id="shade" width="880" height="1100" fill="#1c1109" fill-opacity=".62" mask="url(#m)"/>
+      <g id="threads"></g>
+      <g id="tags"></g>
+      <g id="hits"></g>
+    </svg>
+  </div>
+  <aside>
+    <p class="kicker"><a href="/interactive.html">← Interactive</a> · <a href="/">Isaac Hernandez</a> · The desk</p>
+    <h1 id="title">Everything on this desk is <em>connected.</em></h1>
+    <p id="lede">Fourteen things I keep coming back to. Pick one up and see what it is tied to.</p>
+    <ul id="rows"></ul>
+    <div class="controls">
+      <button id="reset" type="button">Put it back</button>
+      <button id="sound" type="button" aria-pressed="true">Sound on</button>
+    </div>
+    <p class="credit">Directed by Isaac Hernandez. The photograph is AI-generated; designed and coded with Claude Fable 5.2.</p>
+  </aside>
+</main>
+<script>
+// One table. For each thing: its name, the box it occupies on the photo (880 x 1100 space),
+// and the spot of bare wood beside it where its pin goes.
+const N = {
+  art:   { name: 'Art direction', box: [18, 72, 310, 318],   pin: [335, 215] },
+  type:  { name: 'Type',          box: [355, 75, 505, 245],  pin: [532, 160] },
+  print: { name: 'Print',         box: [585, 85, 848, 295],  pin: [562, 200] },
+  music: { name: 'Music',         box: [58, 343, 265, 463],  pin: [286, 405] },
+  motion:{ name: 'Motion',        box: [358, 295, 542, 432], pin: [557, 350] },
+  code:  { name: 'Code',          box: [686, 336, 788, 426], pin: [667, 382] },
+  ai:    { name: 'AI direction',  box: [36, 522, 282, 640],  pin: [306, 590] },
+  rec:   { name: 'Records',       box: [330, 465, 602, 665], pin: [540, 690] },
+  la:    { name: 'Los Angeles',   box: [640, 484, 858, 646], pin: [622, 565] },
+  jp:    { name: 'Japan',         box: [66, 680, 168, 812],  pin: [190, 742] },
+  hand:  { name: 'Handmade',      box: [264, 696, 600, 850], pin: [396, 714] },
+  shops: { name: 'Small shops',   box: [56, 876, 294, 1046], pin: [316, 962], tagUp: true },
+  sun:   { name: 'Sun and light', box: [384, 892, 630, 1040],pin: [370, 952], tagUp: true },
+  att:   { name: 'Attention',     box: [674, 826, 772, 1004],pin: [654, 916], tagUp: true },
+};
+const L = [
+  ['art','type','Studio Rules: the words are the picture.'],
+  ['art','shops','Bar Covell, Bicycle Kitchen, Fugetsu-Do. One line for one shop.'],
+  ['art','ai','Studio Rules: I write the brief, agents build, I sign off.'],
+  ['type','print','Look up. A two-ink poster led by its headline.'],
+  ['print','ai','The riso test: which model can print in two inks.'],
+  ['print','rec','Tin Moon Records and SIDE B. Sleeves and shop print.'],
+  ['rec','music','Permanent Records, and three songs of my own.'],
+  ['music','print','The SUNRISE cover: its reflection is drawn from the hook.'],
+  ['music','motion','One line. Type lands on the beat.'],
+  ['music','ai','A bridge that lets an assistant work inside Ableton Live.'],
+  ['motion','code','FIBS. A 14-second spot where every pixel is code.'],
+  ['motion','hand','Paper props in One line, and a stop-motion film for Sportiefs.'],
+  ['code','ai','Rules Off / Rules On. One brief, built twice by an agent.'],
+  ['code','sun','SOLA. A live map of today’s sun.'],
+  ['sun','la','SOLA: the sun over the Los Angeles coast.'],
+  ['sun','music','SUNRISE. Three songs, sun-up to late night.'],
+  ['la','shops','Bar Covell, Bicycle Kitchen, Permanent Records.'],
+  ['la','jp','Fugetsu-Do, in Little Tokyo.'],
+  ['jp','hand','YOAKE and Shallows. Tokyo and Izu, built in clay.'],
+  ['hand','print','Riso and cut paper. Things that look made, not generated.'],
+  ['ai','att','What I write about: who is training whom.'],
+  ['att','motion','Secondhand Morning. A narrator who only knows mornings from what people say.'],
+];
+const NS = 'http://www.w3.org/2000/svg';
+const el = (t, a, p) => { const e = document.createElementNS(NS, t); for (const k in a) e.setAttribute(k, a[k]); if (p) p.appendChild(e); return e; };
+const $ = id => document.getElementById(id);
+const stage = $('stage'), threads = $('threads'), tags = $('tags'), holes = $('holes'), rows = $('rows');
+const IDLE = { title: $('title').innerHTML, lede: $('lede').textContent };
+const params = new URLSearchParams(location.search);
+// ?still=1 skips all motion so a still can be captured; ?t=0.4 freezes the threads at that many seconds
+const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const still = reduce || params.has('still');
+const freezeAt = params.has('t') ? +params.get('t') : null;
+if (still) document.documentElement.classList.add('still');
+const tagEls = {};
+let current = null, peeked = null;
+
+for (const k in N) {
+  const n = N[k], [x1, y1, x2, y2] = n.box, cx = (x1 + x2) / 2, w = n.name.length * 12.2 + 26;
+  const g = el('g', { class: 'tag' }, tags);
+  const tx = Math.max(w / 2 + 8, Math.min(880 - w / 2 - 8, cx)), ty = n.tagUp ? y1 - 4 : Math.min(1100 - 24, y2 + 6);
+  el('rect', { x: tx - w / 2, y: ty - 16, width: w, height: 32, rx: 2 }, g);
+  const t = el('text', { x: tx, y: ty + 1, 'text-anchor': 'middle', 'dominant-baseline': 'central' }, g); t.textContent = n.name;
+  tagEls[k] = g;
+  const h = el('rect', { class: 'hit', x: x1, y: y1, width: x2 - x1, height: y2 - y1, rx: 10, tabindex: 0, role: 'button', 'aria-label': n.name }, $('hits'));
+  h.addEventListener('click', e => { e.stopPropagation(); pick(k); });
+  h.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); pick(k); } });
+  h.addEventListener('pointerenter', e => { if (e.pointerType === 'mouse') peek(k); });
+  h.addEventListener('pointerleave', () => peek(null));
+  h.addEventListener('focus', () => peek(k));
+  h.addEventListener('blur', () => peek(null));
+}
+stage.addEventListener('click', () => pick(null));
+$('reset').addEventListener('click', () => pick(null));
+document.addEventListener('keydown', e => { if (e.key === 'Escape') pick(null); });
+
+function light(ids) {
+  holes.textContent = '';
+  ids.forEach(id => { const [x1, y1, x2, y2] = N[id].box; el('ellipse', { cx: (x1 + x2) / 2, cy: (y1 + y2) / 2, rx: (x2 - x1) * .5 + 62, ry: (y2 - y1) * .5 + 62, fill: 'url(#hole)' }, holes); });
+}
+// Hovering before anything is picked up: the desk dims a little and that one thing gets its tag.
+function peek(k) {
+  if (current) return;
+  if (k === peeked) return;
+  peeked = k;
+  for (const t in tagEls) tagEls[t].classList.toggle('show', t === k);
+  stage.classList.toggle('peek', !!k);
+  if (k) light([k]);
+}
+
+// ---- threads -------------------------------------------------------------
+// Each thread grows from the picked-up thing's pin to the other pin, taut while it travels,
+// then drops into a sag and settles like a real thread would.
+let live = [], raf = 0, t0 = 0;
+const GROW = .46, STAGGER = .075, SETTLE = 1.5;
+const ease = p => 1 - Math.pow(1 - p, 3);
+function shape(th, t) {
+  const p = Math.min(1, Math.max(0, (t - th.delay) / GROW)), e = ease(p);
+  const [ax, ay] = th.a, [bx, by] = th.b, x = ax + (bx - ax) * e, y = ay + (by - ay) * e;
+  const d = Math.hypot(x - ax, y - ay), tau = t - th.delay - GROW;
+  const slack = p < 1 ? .3 * e : 1 - .7 * Math.exp(-4.2 * tau) * Math.cos(10.5 * tau);
+  const sag = (16 + d * .075) * slack;
+  return { d: `M${ax} ${ay} Q${(ax + x) / 2} ${(ay + y) / 2 + sag} ${x.toFixed(1)} ${y.toFixed(1)}`, arrived: p >= 1, started: t >= th.delay };
+}
+function pinAt([x, y], parent) { const g = el('g', { class: 'pin' }, parent); el('circle', { cx: x, cy: y, r: 7 }, g); el('circle', { cx: x - 2, cy: y - 2.2, r: 2 }, g); return g; }
+function frame(now) {
+  const t = freezeAt != null ? freezeAt : still ? 99 : (now - t0) / 1000;
+  let busy = false;
+  for (const th of live) {
+    const s = shape(th, t);
+    th.path.setAttribute('d', s.d); th.shadow.setAttribute('d', s.d);
+    th.path.style.visibility = th.shadow.style.visibility = s.started ? 'visible' : 'hidden';
+    if (s.arrived && !th.pinned) { th.pinned = true; pinAt(th.b, th.pins); tagEls[th.to].classList.add('show'); if (!still && freezeAt == null) pluck(th.i); }
+    if (t < th.delay + GROW + SETTLE) busy = true;
+  }
+  raf = busy && !still && freezeAt == null ? requestAnimationFrame(frame) : 0;
+}
+
+function pick(k, quiet) {
+  if (k === current) k = null;
+  current = k; peeked = null;
+  cancelAnimationFrame(raf); live = [];
+  threads.textContent = ''; rows.textContent = '';
+  for (const t in tagEls) tagEls[t].classList.remove('show');
+  stage.classList.remove('peek'); stage.classList.toggle('on', !!k);
+  $('reset').classList.toggle('show', !!k);
+  history.replaceState(null, '', k ? '#' + k : location.pathname + location.search);
+  if (!k) { $('title').innerHTML = IDLE.title; $('lede').textContent = IDLE.lede; return; }
+  const me = N[k], near = [];
+  L.forEach(([a, b, why]) => { if (a === k || b === k) near.push([a === k ? b : a, why]); });
+  // string the nearest first, so the threads fan out
+  near.sort((p, q) => Math.hypot(N[p[0]].pin[0] - me.pin[0], N[p[0]].pin[1] - me.pin[1]) - Math.hypot(N[q[0]].pin[0] - me.pin[0], N[q[0]].pin[1] - me.pin[1]));
+  light([k, ...near.map(n => n[0])]);
+  tagEls[k].classList.add('show');
+  const sh = el('g', { transform: 'translate(5 9)' }, threads), ln = el('g', {}, threads), pins = el('g', {}, threads);
+  near.forEach(([o], i) => live.push({ a: me.pin, b: N[o].pin, to: o, i, delay: .12 + i * STAGGER, shadow: el('path', { class: 'thread-shadow' }, sh), path: el('path', { class: 'thread' }, ln), pins }));
+  pinAt(me.pin, pins);
+  if (!quiet) thud();
+  t0 = performance.now(); frame(t0);
+  $('title').textContent = me.name;
+  $('lede').textContent = `Tied to ${near.length} other ${near.length === 1 ? 'thing' : 'things'} on the desk.`;
+  near.forEach(([o, why], i) => {
+    const li = document.createElement('li'); li.style.animationDelay = (.2 + i * STAGGER) + 's';
+    const b = document.createElement('button'); b.type = 'button';
+    const nm = document.createElement('b'); nm.textContent = N[o].name; const sp = document.createElement('span'); sp.textContent = why;
+    b.append(nm, sp); b.addEventListener('click', () => pick(o)); li.append(b); rows.append(li);
+  });
+}
+
+// ---- sound ---------------------------------------------------------------
+// A soft thud when something is picked up, and one plucked note per thread as it lands.
+// Notes step up a pentatonic scale, so a thing with more ties plays a longer run.
+let ac = null, soundOn = true;
+const SCALE = [0, 2, 4, 7, 9, 12, 14, 16];
+function audio() { if (!soundOn) return null; if (!ac) { const C = window.AudioContext || window.webkitAudioContext; if (!C) return null; ac = new C(); } if (ac.state === 'suspended') ac.resume(); return ac; }
+function pluck(i) {
+  const a = audio(); if (!a) return;
+  const f = 220 * Math.pow(2, SCALE[i % SCALE.length] / 12), t = a.currentTime;
+  const o = a.createOscillator(), g = a.createGain(), lp = a.createBiquadFilter();
+  o.type = 'triangle'; o.frequency.setValueAtTime(f, t);
+  lp.type = 'lowpass'; lp.frequency.setValueAtTime(2600, t); lp.frequency.exponentialRampToValueAtTime(500, t + .5);
+  g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(.11, t + .006); g.gain.exponentialRampToValueAtTime(.0008, t + .75);
+  o.connect(lp).connect(g).connect(a.destination); o.start(t); o.stop(t + .8);
+}
+function thud() {
+  const a = audio(); if (!a) return;
+  const t = a.currentTime, o = a.createOscillator(), g = a.createGain();
+  o.type = 'sine'; o.frequency.setValueAtTime(130, t); o.frequency.exponentialRampToValueAtTime(52, t + .14);
+  g.gain.setValueAtTime(.16, t); g.gain.exponentialRampToValueAtTime(.0008, t + .22);
+  o.connect(g).connect(a.destination); o.start(t); o.stop(t + .25);
+}
+$('sound').addEventListener('click', e => { soundOn = !soundOn; e.currentTarget.textContent = soundOn ? 'Sound on' : 'Sound off'; e.currentTarget.setAttribute('aria-pressed', soundOn); });
+
+// ---- dust ----------------------------------------------------------------
+// Specks drifting through the bar of sun in the top left. They only show where the light is.
+(function dust() {
+  if (still) return;
+  const c = $('dust'), g = c.getContext('2d'); let W = 0, H = 0, id = 0;
+  const motes = Array.from({ length: 46 }, () => ({ u: Math.random(), v: Math.random(), r: .5 + Math.random() * 1.3, s: .004 + Math.random() * .01, ph: Math.random() * 6.3, tw: .4 + Math.random() * 1.2 }));
+  const size = () => { const b = stage.getBoundingClientRect(), d = Math.min(2, devicePixelRatio || 1); W = c.width = Math.round(b.width * d); H = c.height = Math.round(b.height * d); };
+  size(); new ResizeObserver(size).observe(stage);
+  let last = performance.now();
+  function tick(now) {
+    const dt = Math.min(.05, (now - last) / 1000); last = now;
+    g.clearRect(0, 0, W, H);
+    for (const m of motes) {
+      m.u += m.s * dt * 1.1; m.v -= m.s * dt * .7; m.ph += dt * m.tw;
+      if (m.u > 1 || m.v < 0) { m.u = Math.random() * .3; m.v = .6 + Math.random() * .4; }
+      // the light bar runs diagonally from the top-left corner; u is along it, v across it
+      const x = (m.u * .62 + (m.v - .5) * .2) * W, y = (m.u * .42 + m.v * .18 - .02) * H;
+      const a = Math.max(0, Math.sin(m.ph)) * .5 * Math.sin(Math.PI * Math.min(1, m.u * 1.6));
+      g.fillStyle = `rgba(255,236,196,${a.toFixed(3)})`;
+      g.beginPath(); g.arc(x, y, m.r * W / 700, 0, 6.3); g.fill();
+    }
+    id = requestAnimationFrame(tick);
+  }
+  id = requestAnimationFrame(tick);
+  document.addEventListener('visibilitychange', () => { cancelAnimationFrame(id); if (!document.hidden) { last = performance.now(); id = requestAnimationFrame(tick); } });
+})();
+
+// A link can open with one thing already picked up: #music, or ?pick=music for stills.
+const q = params.get('pick') || location.hash.slice(1); if (q && N[q]) pick(q, true);
+window.addEventListener('hashchange', () => { const h = location.hash.slice(1); if (h !== (current || '') && (N[h] || !h)) { current = null; pick(N[h] ? h : null, true); } });
+</script>
+</body>
+</html>
