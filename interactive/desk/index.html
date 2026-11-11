@@ -199,7 +199,8 @@ function peek(k) {
 // then drops into a sag and settles like a real thread would.
 let live = [], raf = 0, t0 = 0;
 const GROW = .46, STAGGER = .075, SETTLE = 1.5;
-const ease = p => 1 - Math.pow(1 - p, 3);
+// the tip speeds up into the pin, so the landing is one clear moment for the tick to sit on
+const ease = p => .35 * p + .65 * p * p;
 function shape(th, t) {
   const p = Math.min(1, Math.max(0, (t - th.delay) / GROW)), e = ease(p);
   const [ax, ay] = th.a, [bx, by] = th.b, x = ax + (bx - ax) * e, y = ay + (by - ay) * e;
@@ -216,7 +217,7 @@ function frame(now) {
     const s = shape(th, t);
     th.path.setAttribute('d', s.d); th.shadow.setAttribute('d', s.d);
     th.path.style.visibility = th.shadow.style.visibility = s.started ? 'visible' : 'hidden';
-    if (s.arrived && !th.pinned) { th.pinned = true; pinAt(th.b, th.pins); tagEls[th.to].classList.add('show'); if (!still && freezeAt == null) pluck(th); }
+    if (s.arrived && !th.pinned) { th.pinned = true; pinAt(th.b, th.pins); tagEls[th.to].classList.add('show'); if (sync) sync.push({ i: th.i, seen: performance.now() - t0, due: (th.delay + GROW) * 1000 }); }
     if (t < th.delay + GROW + SETTLE) busy = true;
   }
   raf = busy && !still && freezeAt == null ? requestAnimationFrame(frame) : 0;
@@ -225,7 +226,7 @@ function frame(now) {
 function pick(k, quiet) {
   if (k === current) k = null;
   current = k; peeked = null;
-  cancelAnimationFrame(raf); live = [];
+  cancelAnimationFrame(raf); live = []; hush();
   threads.textContent = ''; rows.textContent = '';
   for (const t in tagEls) tagEls[t].classList.remove('show');
   stage.classList.remove('peek'); stage.classList.toggle('on', !!k);
@@ -241,8 +242,9 @@ function pick(k, quiet) {
   const sh = el('g', { transform: 'translate(5 9)' }, threads), ln = el('g', {}, threads), pins = el('g', {}, threads);
   near.forEach(([o], i) => live.push({ a: me.pin, b: N[o].pin, to: o, i, delay: .12 + i * STAGGER, shadow: el('path', { class: 'thread-shadow' }, sh), path: el('path', { class: 'thread' }, ln), pins }));
   pinAt(me.pin, pins);
-  if (!quiet) thud(k);
-  t0 = performance.now(); frame(t0);
+  t0 = performance.now(); if (sync) sync.length = 0;
+  if (!quiet && !still) cue(live.map(th => th.delay + GROW));
+  frame(t0);
   $('title').textContent = me.name;
   $('lede').textContent = `Tied to ${near.length} other ${near.length === 1 ? 'thing' : 'things'} on the desk.`;
   near.forEach(([o, why], i) => {
@@ -266,15 +268,29 @@ function sndTap(ctx, when) {
 function sndTick(ctx, when) {
   const n = ctx.createBufferSource(), f = ctx.createBiquadFilter(), g = ctx.createGain();
   n.buffer = noise(ctx, .018); f.type = 'bandpass'; f.frequency.value = 2200; f.Q.value = 1.2; g.gain.value = .75;
-  n.connect(f).connect(g).connect(ctx.destination); n.start(when);
+  n.connect(f).connect(g).connect(ctx.destination); n.start(when); return n;
 }
 function audio() {
   if (!soundOn) return null;
   if (!ac) { const C = window.AudioContext || window.webkitAudioContext; if (!C) return null; ac = new C(); }
   if (ac.state === 'suspended') ac.resume(); return ac;
 }
-function pluck() { const a = audio(); if (a) sndTick(a, a.currentTime); }
-function thud() { const a = audio(); if (a) sndTap(a, a.currentTime); }
+// Sound is scheduled on the audio clock the moment something is picked up, not fired from the
+// drawing loop, so each tick lands exactly when its thread does even if a frame is late.
+// The output delay of the device is taken off, so the sound arrives with the picture.
+let queued = [];
+const sync = params.has('debug') ? (window.__sync = []) : null;
+function hush() { queued.forEach(n => { try { n.stop(); } catch (e) {} }); queued = []; }
+function cue(times) {
+  const a = audio(); if (!a) return;
+  const lag = Math.min(.12, a.outputLatency || a.baseLatency || 0), now = a.currentTime;
+  sndTap(a, now);
+  queued = times.map(t => sndTick(a, Math.max(now, now + t - lag)));
+  if (sync) window.__cue = { lag: lag * 1000, state: a.state, times: times.map(t => t * 1000) };
+}
+// Wake the audio on the press, before the click arrives, so the first sound is not late.
+document.addEventListener('pointerdown', () => audio(), { passive: true });
+document.addEventListener('keydown', () => audio());
 $('sound').addEventListener('click', e => { soundOn = !soundOn; e.currentTarget.textContent = soundOn ? 'Sound on' : 'Sound off'; e.currentTarget.setAttribute('aria-pressed', soundOn); });
 // For checking levels: render the whole sequence for one thing offline and return the samples.
 async function renderSound(k) {
