@@ -25,6 +25,7 @@
   #stage { position: relative; width: min(92vw, 76dvh); aspect-ratio: 4 / 5; overflow: hidden; border-radius: 3px; background: #b48d62; box-shadow: 0 18px 40px -22px #3b2a1a99; touch-action: manipulation; }
   #stage img, #stage svg, #stage canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
   #stage img { object-fit: cover; user-select: none; -webkit-user-drag: none; }
+  #web { pointer-events: none; }
   #dust { pointer-events: none; mix-blend-mode: screen; transition: opacity .5s ease; }
   #stage.on #dust { opacity: 0; }
   .hit { fill: transparent; cursor: pointer; outline: none; }
@@ -32,14 +33,8 @@
   #shade { opacity: 0; transition: opacity .5s cubic-bezier(.3,.7,.2,1); pointer-events: none; }
   #stage.peek #shade { opacity: .45; transition-duration: .25s; }
   #stage.on #shade { opacity: 1; }
-  .thread { fill: none; stroke: var(--thread); stroke-width: 3; stroke-linecap: round; }
-  .thread-shadow { fill: none; stroke: #2a160c; stroke-opacity: .34; stroke-width: 3.4; stroke-linecap: round; }
-  #threads { transition: opacity .18s ease; }
-  #threads.out { opacity: 0; }
-  .pin { transform-box: fill-box; transform-origin: center; animation: pop .28s cubic-bezier(.3,1.6,.5,1) both; }
   .pin circle:first-child { fill: #d9b25a; stroke: #6b4a12; stroke-width: 1; }
   .pin circle:last-child { fill: #fff3cf; }
-  @keyframes pop { from { transform: scale(0); } }
   .tag rect { fill: var(--paper); stroke: #0002; stroke-width: 1; }
   .tag text { font-family: 'DM Mono', ui-monospace, monospace; font-size: 17px; letter-spacing: .08em; text-transform: uppercase; fill: var(--ink); }
   .tag { opacity: 0; transform: translateY(6px); transition: opacity .25s ease, transform .35s cubic-bezier(.3,.7,.2,1); pointer-events: none; }
@@ -67,13 +62,12 @@
   @keyframes rise { to { opacity: 1; transform: none; } }
   .still #rows li { animation: none; opacity: 1; transform: none; }
   .still .tag, .still #shade { transition: none; }
-  .still .pin { animation: none; }
   @media (max-width: 860px) {
     main { grid-template-columns: 1fr; align-items: start; gap: 22px; padding: 0 0 32px; }
     #stage { width: 100vw; border-radius: 0; box-shadow: none; }
     aside { padding: 0 20px; }
   }
-  @media (prefers-reduced-motion: reduce) { #rows li { animation: none; opacity: 1; transform: none; } .pin { animation: none; } .tag { transition: none; } }
+  @media (prefers-reduced-motion: reduce) { #rows li { animation: none; opacity: 1; transform: none; } .tag { transition: none; } }
 </style>
 </head>
 <body>
@@ -81,13 +75,14 @@
   <div id="stage">
     <img src="desk-1000.jpg" srcset="desk-1000.jpg 1000w, desk-1792.jpg 1792w" sizes="(max-width: 860px) 100vw, 76dvh" width="1792" height="2240" decoding="async" alt="A wooden desk seen from above in morning light, with fourteen small objects laid out on it: a contact sheet, wooden type, an ink roller, a small synthesizer, a strip of film, a circuit board, an index card and stamp, a record, a postcard of palm trees, a lucky cat, clay and scissors, a matchbook and receipt, a prism and an hourglass.">
     <canvas id="dust" aria-hidden="true"></canvas>
+    <canvas id="web" aria-hidden="true"></canvas>
     <svg id="over" viewBox="0 0 880 1100" aria-label="Objects on the desk">
       <defs>
         <radialGradient id="hole"><stop offset="0" stop-color="#000"/><stop offset=".68" stop-color="#000"/><stop offset="1" stop-color="#000" stop-opacity="0"/></radialGradient>
         <mask id="m"><rect width="880" height="1100" fill="#fff"/><g id="holes"></g></mask>
       </defs>
       <rect id="shade" width="880" height="1100" fill="#1c1109" fill-opacity=".62" mask="url(#m)"/>
-      <g id="threads"></g>
+      <g id="pins"></g>
       <g id="tags"></g>
       <g id="hits"></g>
     </svg>
@@ -150,7 +145,7 @@ const L = [
 const NS = 'http://www.w3.org/2000/svg';
 const el = (t, a, p) => { const e = document.createElementNS(NS, t); for (const k in a) e.setAttribute(k, a[k]); if (p) p.appendChild(e); return e; };
 const $ = id => document.getElementById(id);
-const stage = $('stage'), threads = $('threads'), tags = $('tags'), holes = $('holes'), rows = $('rows');
+const stage = $('stage'), tags = $('tags'), holes = $('holes'), rows = $('rows');
 const IDLE = { title: $('title').innerHTML, lede: $('lede').textContent };
 const params = new URLSearchParams(location.search);
 // ?still=1 skips all motion so a still can be captured; ?t=0.4 freezes the threads at that many seconds
@@ -194,57 +189,119 @@ function peek(k) {
   if (k) light([k]);
 }
 
-// ---- threads -------------------------------------------------------------
-// Each thread grows from the picked-up thing's pin to the other pin, taut while it travels,
-// then drops into a sag and settles like a real thread would.
-let live = [], raf = 0, t0 = 0;
-const GROW = .46, STAGGER = .075, SETTLE = 1.5;
-// the tip speeds up into the pin, so the landing is one clear moment for the tick to sit on
+// ---- the web ---------------------------------------------------------------
+// Every tie is a real length of thread pinned across the desk, simulated as a rope of short
+// links. At rest the threads are almost invisible; they catch the light near the pointer and
+// give way when it passes through them. Picking something up dyes its threads red, one at a
+// time, from its own pin outward. The moment the dye reaches the far pin is the "hit".
+const web = $('web'), wg = web.getContext('2d');
+const SEG = 14, GROW = .46, STAGGER = .075, GRAV = .045, DAMP = .982, REACH = 30, GLOW = 170;
+// the dye speeds up into the pin, so the landing is one clear moment for the tick to sit on
 const ease = p => .35 * p + .65 * p * p;
-function shape(th, t) {
-  const p = Math.min(1, Math.max(0, (t - th.delay) / GROW)), e = ease(p);
-  const [ax, ay] = th.a, [bx, by] = th.b, x = ax + (bx - ax) * e, y = ay + (by - ay) * e;
-  const d = Math.hypot(x - ax, y - ay), tau = t - th.delay - GROW;
-  const slack = p < 1 ? .3 * e : 1 - .7 * Math.exp(-4.2 * tau) * Math.cos(10.5 * tau);
-  const sag = (16 + d * .075) * slack;
-  return { d: `M${ax} ${ay} Q${(ax + x) / 2} ${(ay + y) / 2 + sag} ${x.toFixed(1)} ${y.toFixed(1)}`, arrived: p >= 1, started: t >= th.delay };
-}
-function pinAt([x, y], parent) { const g = el('g', { class: 'pin' }, parent); el('circle', { cx: x, cy: y, r: 7 }, g); el('circle', { cx: x - 2, cy: y - 2.2, r: 2 }, g); return g; }
-function frame(now) {
-  const t = freezeAt != null ? freezeAt : still ? 99 : (now - t0) / 1000;
-  let busy = false;
-  for (const th of live) {
-    const s = shape(th, t);
-    th.path.setAttribute('d', s.d); th.shadow.setAttribute('d', s.d);
-    th.path.style.visibility = th.shadow.style.visibility = s.started ? 'visible' : 'hidden';
-    if (s.arrived && !th.pinned) { th.pinned = true; pinAt(th.b, th.pins); tagEls[th.to].classList.add('show'); if (sync) sync.push({ i: th.i, seen: performance.now() - t0, due: (th.delay + GROW) * 1000 }); }
-    if (t < th.delay + GROW + SETTLE) busy = true;
+const ropes = L.map(([a, b]) => {
+  const A = N[a].pin, B = N[b].pin, d = Math.hypot(B[0] - A[0], B[1] - A[1]), pts = [];
+  for (let i = 0; i <= SEG; i++) { const u = i / SEG, x = A[0] + (B[0] - A[0]) * u, y = A[1] + (B[1] - A[1]) * u; pts.push({ x, y, px: x, py: y }); }
+  return { a, b, pts, link: d * 1.014 / SEG, alpha: 0, on: false, flip: false, delay: 0, dye: 0, hit: false, ring: 0 };
+});
+const ptr = { x: -999, y: -999, vx: 0, vy: 0, on: false };
+let t0 = 0, picking = false, awake = 0, loop = 0, scale = 1;
+
+function step() {
+  let moving = 0;
+  for (const r of ropes) {
+    const p = r.pts;
+    for (let i = 1; i < SEG; i++) {
+      const q = p[i]; let vx = (q.x - q.px) * DAMP, vy = (q.y - q.py) * DAMP;
+      q.px = q.x; q.py = q.y; q.x += vx; q.y += vy + GRAV;
+      if (ptr.on) { const dx = q.x - ptr.x, dy = q.y - ptr.y, d = Math.hypot(dx, dy); if (d < REACH && d > .01) { const f = (REACH - d) / REACH; q.x += dx / d * f * 5 + ptr.vx * f * .3; q.y += dy / d * f * 5 + ptr.vy * f * .3; } }
+    }
+    for (let k = 0; k < 6; k++) for (let i = 0; i < SEG; i++) {      // links only pull when stretched: thread has slack
+      const u = p[i], v = p[i + 1], dx = v.x - u.x, dy = v.y - u.y, d = Math.hypot(dx, dy); if (d <= r.link) continue;
+      const c = (d - r.link) / d * .5, fu = i === 0 ? 0 : (i === SEG - 1 ? 2 : 1), fv = i === SEG - 1 ? 0 : (i === 0 ? 2 : 1);
+      u.x += dx * c * fu; u.y += dy * c * fu; v.x -= dx * c * fv; v.y -= dy * c * fv;
+    }
+    for (let i = 1; i < SEG; i++) moving += Math.abs(p[i].x - p[i].px) + Math.abs(p[i].y - p[i].py);      // what actually moved, after the links pulled back
   }
-  raf = busy && !still && freezeAt == null ? requestAnimationFrame(frame) : 0;
+  return moving;
 }
+function trace(p, from, to, ox, oy) {      // a smooth line through part of a rope
+  wg.beginPath(); wg.moveTo((p[from].x + ox) * scale, (p[from].y + oy) * scale);
+  for (let i = from + 1; i < to; i++) wg.quadraticCurveTo((p[i].x + ox) * scale, (p[i].y + oy) * scale, ((p[i].x + p[i + 1].x) / 2 + ox) * scale, ((p[i].y + p[i + 1].y) / 2 + oy) * scale);
+  wg.lineTo((p[to].x + ox) * scale, (p[to].y + oy) * scale); wg.stroke();
+}
+function draw(t) {
+  wg.clearRect(0, 0, web.width, web.height); wg.lineCap = 'round'; wg.lineJoin = 'round';
+  let busy = false;
+  for (const r of ropes) {
+    let near = 0;
+    if (ptr.on && !picking) for (let i = 0; i <= SEG; i += 2) { const d = Math.hypot(r.pts[i].x - ptr.x, r.pts[i].y - ptr.y); near = Math.max(near, 1 - d / GLOW); }
+    const want = picking ? (r.on ? 1 : 0) : .1 + .8 * Math.max(0, near) ** 1.5;
+    r.alpha += (want - r.alpha) * (still ? 1 : .14); if (Math.abs(want - r.alpha) > .01) busy = true;
+    if (r.on) {
+      const p = Math.min(1, Math.max(0, (t - r.delay) / GROW)); r.dye = still && freezeAt == null ? 1 : ease(p);
+      if (p >= 1 && !r.hit) { r.hit = true; r.ring = t; landed(r); }
+      if (p < 1) busy = true;
+    }
+    if (r.alpha < .012) continue;
+    const pts = r.flip ? r.pts.slice().reverse() : r.pts;
+    wg.strokeStyle = `rgba(34,18,9,${(.36 * r.alpha).toFixed(3)})`; wg.lineWidth = 3.2 * scale; trace(pts, 0, SEG, 5, 9);
+    wg.strokeStyle = `rgba(240,229,208,${(r.alpha * (r.on ? .5 : 1)).toFixed(3)})`; wg.lineWidth = (r.on ? 2 : 1.7) * scale; trace(pts, 0, SEG, 0, 0);
+    if (r.on && r.dye > 0) { const n = Math.max(1, Math.round(r.dye * SEG)); wg.strokeStyle = '#c9382c'; wg.lineWidth = 3 * scale; trace(pts, 0, n, 0, 0); }
+    if (r.hit && t - r.ring < .32) {      // a small brass flash where it lands
+      const e = (t - r.ring) / .32, far = pts[SEG]; wg.strokeStyle = `rgba(255,226,150,${(.8 * (1 - e)).toFixed(3)})`; wg.lineWidth = 2 * scale;
+      wg.beginPath(); wg.arc(far.x * scale, far.y * scale, (7 + e * 20) * scale, 0, 6.3); wg.stroke(); busy = true;
+    }
+  }
+  return busy;
+}
+// What happens at the hit: the name tag appears and the thread twangs. The tick was already
+// queued on the audio clock for this same instant (see cue()).
+function landed(r) {
+  tagEls[r.flip ? r.a : r.b].classList.add('show');
+  if (sync) sync.push({ seen: performance.now() - t0, due: (r.delay + GROW) * 1000 });
+  if (still) return;
+  const p = r.pts, dx = p[SEG].x - p[0].x, dy = p[SEG].y - p[0].y, d = Math.hypot(dx, dy) || 1;
+  for (let i = 1; i < SEG; i++) { const k = Math.sin(Math.PI * i / SEG) * 5; p[i].px += -dy / d * k; p[i].py += dx / d * k; }
+}
+function run(now) {
+  const t = freezeAt != null ? freezeAt : (now - t0) / 1000;
+  if (!still) step();
+  const busy = draw(t);
+  if (busy) awake = now;
+  ptr.vx *= .6; ptr.vy *= .6;
+  loop = !still && now - awake < 2600 ? requestAnimationFrame(run) : 0;      // sleeps a few seconds after the last touch, once the threads have settled
+}
+function wake() { awake = performance.now(); if (!loop && !still) loop = requestAnimationFrame(run); }
+function fit() { const b = stage.getBoundingClientRect(), d = Math.min(2, devicePixelRatio || 1); web.width = Math.round(b.width * d); web.height = Math.round(b.height * d); scale = web.width / 880; if (still) draw(freezeAt != null ? freezeAt : 99); else wake(); }
+function where(e) { const b = stage.getBoundingClientRect(); return [(e.clientX - b.left) / b.width * 880, (e.clientY - b.top) / b.height * 1100]; }
+stage.addEventListener('pointermove', e => { const [x, y] = where(e); if (ptr.on) { ptr.vx = x - ptr.x; ptr.vy = y - ptr.y; } ptr.x = x; ptr.y = y; ptr.on = true; wake(); });
+stage.addEventListener('pointerleave', () => { ptr.on = false; wake(); });
+stage.addEventListener('pointercancel', () => { ptr.on = false; });
+// brass pins, one beside each thing
+for (const k in N) { const [x, y] = N[k].pin, g = el('g', { class: 'pin' }, $('pins')); el('circle', { cx: x, cy: y, r: 6 }, g); el('circle', { cx: x - 1.7, cy: y - 1.9, r: 1.7 }, g); }
+for (let i = 0; i < 260; i++) step();      // let the threads hang before the first frame
+new ResizeObserver(fit).observe(stage);
 
 function pick(k, quiet) {
   if (k === current) k = null;
-  current = k; peeked = null;
-  cancelAnimationFrame(raf); live = []; hush();
-  threads.textContent = ''; rows.textContent = '';
+  current = k; peeked = null; picking = !!k; hush();
+  rows.textContent = '';
   for (const t in tagEls) tagEls[t].classList.remove('show');
-  stage.classList.remove('peek'); stage.classList.toggle('on', !!k);
-  $('reset').classList.toggle('show', !!k);
+  stage.classList.remove('peek'); stage.classList.toggle('on', picking);
+  $('reset').classList.toggle('show', picking);
   history.replaceState(null, '', k ? '#' + k : location.pathname + location.search);
-  if (!k) { $('title').innerHTML = IDLE.title; $('lede').textContent = IDLE.lede; return; }
+  for (const r of ropes) { r.on = false; r.dye = 0; r.hit = false; }
+  t0 = performance.now(); if (sync) sync.length = 0;
+  if (!k) { $('title').innerHTML = IDLE.title; $('lede').textContent = IDLE.lede; if (still) draw(99); else wake(); return; }
   const me = N[k], near = [];
-  L.forEach(([a, b, why]) => { if (a === k || b === k) near.push([a === k ? b : a, why]); });
-  // string the nearest first, so the threads fan out
+  L.forEach(([a, b, why], i) => { if (a === k || b === k) near.push([a === k ? b : a, why, ropes[i]]); });
+  // dye the nearest first, so the red fans out
   near.sort((p, q) => Math.hypot(N[p[0]].pin[0] - me.pin[0], N[p[0]].pin[1] - me.pin[1]) - Math.hypot(N[q[0]].pin[0] - me.pin[0], N[q[0]].pin[1] - me.pin[1]));
+  near.forEach(([o, , r], i) => { r.on = true; r.flip = r.b === k; r.delay = .12 + i * STAGGER; });
   light([k, ...near.map(n => n[0])]);
   tagEls[k].classList.add('show');
-  const sh = el('g', { transform: 'translate(5 9)' }, threads), ln = el('g', {}, threads), pins = el('g', {}, threads);
-  near.forEach(([o], i) => live.push({ a: me.pin, b: N[o].pin, to: o, i, delay: .12 + i * STAGGER, shadow: el('path', { class: 'thread-shadow' }, sh), path: el('path', { class: 'thread' }, ln), pins }));
-  pinAt(me.pin, pins);
-  t0 = performance.now(); if (sync) sync.length = 0;
-  if (!quiet && !still) cue(live.map(th => th.delay + GROW));
-  frame(t0);
+  if (!quiet && !still) cue(near.map((n, i) => .12 + i * STAGGER + GROW));
+  if (still) draw(freezeAt != null ? freezeAt : 99); else wake();
   $('title').textContent = me.name;
   $('lede').textContent = `Tied to ${near.length} other ${near.length === 1 ? 'thing' : 'things'} on the desk.`;
   near.forEach(([o, why], i) => {
