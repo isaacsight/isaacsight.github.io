@@ -204,6 +204,9 @@ const ropes = L.map(([a, b]) => {
   return { a, b, pts, link: d * 1.014 / SEG, alpha: 0, on: false, flip: false, delay: 0, dye: 0, hit: false, ring: 0 };
 });
 const ptr = { x: -999, y: -999, vx: 0, vy: 0, on: false };
+// When nobody is touching the desk, a slow draught wanders across it, so the threads sway and
+// catch the light on their own. This is what a phone sees, where there is no pointer to hover.
+const air = { x: 440, y: 550 };
 let t0 = 0, picking = false, awake = 0, loop = 0, scale = 1;
 
 function step() {
@@ -214,6 +217,7 @@ function step() {
       const q = p[i]; let vx = (q.x - q.px) * DAMP, vy = (q.y - q.py) * DAMP;
       q.px = q.x; q.py = q.y; q.x += vx; q.y += vy + GRAV;
       if (ptr.on) { const dx = q.x - ptr.x, dy = q.y - ptr.y, d = Math.hypot(dx, dy); if (d < REACH && d > .01) { const f = (REACH - d) / REACH; q.x += dx / d * f * 5 + ptr.vx * f * .3; q.y += dy / d * f * 5 + ptr.vy * f * .3; } }
+      else if (!picking) { const dx = q.x - air.x, dy = q.y - air.y, d = Math.hypot(dx, dy); if (d < 120 && d > .01) { const f = (120 - d) / 120; q.x += dx / d * f * .22; q.y += dy / d * f * .22; } }
     }
     for (let k = 0; k < 6; k++) for (let i = 0; i < SEG; i++) {      // links only pull when stretched: thread has slack
       const u = p[i], v = p[i + 1], dx = v.x - u.x, dy = v.y - u.y, d = Math.hypot(dx, dy); if (d <= r.link) continue;
@@ -234,8 +238,9 @@ function draw(t) {
   let busy = false;
   for (const r of ropes) {
     let near = 0;
-    if (ptr.on && !picking) for (let i = 0; i <= SEG; i += 2) { const d = Math.hypot(r.pts[i].x - ptr.x, r.pts[i].y - ptr.y); near = Math.max(near, 1 - d / GLOW); }
-    const want = picking ? (r.on ? 1 : 0) : .1 + .8 * Math.max(0, near) ** 1.5;
+    const src = ptr.on ? ptr : air, reach = ptr.on ? GLOW : 300;
+    if (!picking && !still) for (let i = 0; i <= SEG; i += 2) { const d = Math.hypot(r.pts[i].x - src.x, r.pts[i].y - src.y); near = Math.max(near, 1 - d / reach); }
+    const want = picking ? (r.on ? 1 : 0) : still ? .5 : .3 + .6 * Math.max(0, near) ** 1.5;
     r.alpha += (want - r.alpha) * (still ? 1 : .14); if (Math.abs(want - r.alpha) > .01) busy = true;
     if (r.on) {
       const p = Math.min(1, Math.max(0, (t - r.delay) / GROW)); r.dye = still && freezeAt == null ? 1 : ease(p);
@@ -265,11 +270,12 @@ function landed(r) {
 }
 function run(now) {
   const t = freezeAt != null ? freezeAt : (now - t0) / 1000;
+  const s = now / 1000; air.x = 440 + Math.sin(s * .23) * 330 + Math.sin(s * .61) * 60; air.y = 550 + Math.cos(s * .17) * 420 + Math.cos(s * .47) * 70;
   if (!still) step();
   const busy = draw(t);
   if (busy) awake = now;
   ptr.vx *= .6; ptr.vy *= .6;
-  loop = !still && now - awake < 2600 ? requestAnimationFrame(run) : 0;      // sleeps a few seconds after the last touch, once the threads have settled
+  loop = !still && !document.hidden ? requestAnimationFrame(run) : 0;      // always alive while the page is showing
 }
 function wake() { awake = performance.now(); if (!loop && !still) loop = requestAnimationFrame(run); }
 function fit() { const b = stage.getBoundingClientRect(), d = Math.min(2, devicePixelRatio || 1); web.width = Math.round(b.width * d); web.height = Math.round(b.height * d); scale = web.width / 880; if (still) draw(freezeAt != null ? freezeAt : 99); else wake(); }
@@ -281,6 +287,7 @@ stage.addEventListener('pointercancel', () => { ptr.on = false; });
 for (const k in N) { const [x, y] = N[k].pin, g = el('g', { class: 'pin' }, $('pins')); el('circle', { cx: x, cy: y, r: 6 }, g); el('circle', { cx: x - 1.7, cy: y - 1.9, r: 1.7 }, g); }
 for (let i = 0; i < 260; i++) step();      // let the threads hang before the first frame
 new ResizeObserver(fit).observe(stage);
+document.addEventListener('visibilitychange', () => { if (!document.hidden) wake(); });
 
 function pick(k, quiet) {
   if (k === current) k = null;
