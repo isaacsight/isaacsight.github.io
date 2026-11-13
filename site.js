@@ -92,17 +92,3 @@ document.querySelectorAll('details').forEach(section => {
   nav.addEventListener('click', function(e){ if (e.target.closest('a')) set(false); });
   document.addEventListener('keydown', function(e){ if (e.key === 'Escape' && header.classList.contains('menu-open')) { set(false); b.focus(); } });
 })();
-
-/* Private showcase: visitors who arrived from an unlisted showcase page get a
-   small link back to it on every other page. Nobody else sees it. */
-(function(){
-  try {
-    var back = sessionStorage.getItem('showcaseBack');
-    if (!back || location.pathname === back) return;
-    var a = document.createElement('a');
-    a.href = back;
-    a.textContent = '← Back to the HeyGen page';
-    a.setAttribute('style', 'position:fixed;left:16px;bottom:16px;z-index:9999;padding:12px 18px;border-radius:999px;background:#e8ff65;color:#111111;font:500 14px/1 system-ui,-apple-system,sans-serif;text-decoration:none;box-shadow:0 6px 24px rgba(0,0,0,.25)');
-    document.body.appendChild(a);
-  } catch (e) {}
-})();
