@@ -80,3 +80,4 @@
 @media (max-width:420px){.new-card h3{font-size:20px}.new-card p{font-size:13px}}
 
 @media(min-width:1001px){.project-grid.three{grid-template-columns:repeat(3,1fr)}.project-grid.three .project-card:last-child{padding-top:0}}
+.header-note{white-space:nowrap;flex-shrink:0}@media(max-width:1340px){.header-note{display:none}}
