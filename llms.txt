@@ -74,3 +74,16 @@
 - [Strava: Hello, LA.](https://isaacsight.com/projects/strava.html): seven real Koreatown letter routes, drawn in code from OpenStreetMap.
 - [fal: Split times](https://isaacsight.com/projects/fal.html): one prompt, three models, real inference times.
 - [Archivo LA](https://isaacsight.com/projects/archivo.html): everyday Los Angeles objects catalogued like museum pieces, with the full AI production process.
+
+## Studies (Nov 2026)
+- [Interchange](https://isaacsight.com/projects/interchange-chair.html): A lounge chair bent from one sheet of tinted aluminium, its curves taken from an LA freeway interchange.
+- [LA Stool 01](https://isaacsight.com/projects/icons-in-motion.html): An original stool made of three nested tubes in lifeguard-tower colours, turning inside a technical spec sheet.
+- [AURN](https://isaacsight.com/projects/vapor-bottle.html): Packaging for a fictional fragrance: a brushed-aluminium bottle that comes out of thick white smoke.
+- [Palmbot](https://isaacsight.com/projects/pocket-pals.html): A glossy collectible robot head whose panels pop open to show a tiny LA sunset inside.
+- [Walk Signal](https://isaacsight.com/projects/walk-signal.html): An LA crosswalk figure realises the countdown is almost over, and runs for it.
+- [Horchata Cold Brew](https://isaacsight.com/projects/cream-pour.html): A bright illustrated 3D spot for an invented drink, built around one whipped-cream pour.
+- [A little company](https://isaacsight.com/projects/boil-loop.html): A hand-drawn character loop, generated with fal and timed on twos.
+- [Overhead Rooms](https://isaacsight.com/projects/overhead-rooms.html): Four small Los Angeles rooms seen from straight above, where the only thing that moves is the light.
+- [LUMBRE: Desert Collection](https://isaacsight.com/projects/aurelia-jewelry.html): A fictional jewelry brand where the product, the model and the glass house in the desert are all generated, with no photo shoot.
+- [PASSAGE/00](https://isaacsight.com/projects/mixed-media.html): Creative direction for a streetwear label that doesn't exist: one tunnel photo, then chalk, tape and neon drawn on top.
+- [Roll-Up](https://isaacsight.com/projects/street-doors.html): An old LA storefront gate rolls up onto a sunset beach.
