@@ -73,3 +73,4 @@
 - [Oura Ring 5: Your heart keeps score](https://isaacsight.com/projects/oura.html): five hook-first 9:16 ads for Cardio Effort.
 - [Strava: Hello, LA.](https://isaacsight.com/projects/strava.html): seven real Koreatown letter routes, drawn in code from OpenStreetMap.
 - [fal: Split times](https://isaacsight.com/projects/fal.html): one prompt, three models, real inference times.
+- [Archivo LA](https://isaacsight.com/projects/archivo.html): everyday Los Angeles objects catalogued like museum pieces, with the full AI production process.
