@@ -1,5 +1,0 @@
-{"date":"2026-11-20","prompt":"A single red folded paper crane hanging on a thin thread in a narrow beam of sunlight against a deep cobalt blue plaster wall, studio photograph, crisp shadow, minimal, centered.","runs":[
-{"model":"FLUX.1 [schnell]","endpoint":"fal-ai/flux/schnell","request_id":"01a1fa85-8638-7b81-acdb-6048b5b6b724","inference_s":0.4499720719995821,"file":"schnell.jpg"},
-{"model":"Z-Image Turbo","endpoint":"fal-ai/z-image/turbo","request_id":"01a1fa85-8619-7ee0-8cd7-09587be7742b","inference_s":0.6260806259999754,"file":"zimage.png"},
-{"model":"FLUX.1 [dev]","endpoint":"fal-ai/flux/dev","request_id":"01a1fa85-858f-7811-ae5c-16a073e24ba5","inference_s":2.4617636579996542,"file":"dev.jpg"}],
-"note":"inference time as returned in result.timings.inference by fal's API; excludes queue and network"}
