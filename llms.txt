@@ -69,9 +69,6 @@
 - [Verde Soapery](https://isaacsight.com/projects/verde-soapery.html): Made for the occasion. A gifting campaign printed like wrapping paper — pressed flowers and eucalyptus in two-colour risograph, with the line cut across them on a green ribbon. An independent campaign concept by Isaac Hernandez with AI-assisted artwork.
 
 ## New spec campaigns (Nov 2026)
-- [Notion: Open the right doors](https://isaacsight.com/projects/notion.html): 20 s launch film for Notion 3.8, Context for your agents.
-- [Oura Ring 5: Your heart keeps score](https://isaacsight.com/projects/oura.html): five hook-first 9:16 ads for Cardio Effort.
-- [Strava: Hello, LA.](https://isaacsight.com/projects/strava.html): seven real Koreatown letter routes, drawn in code from OpenStreetMap.
 - [fal: Split times](https://isaacsight.com/projects/fal.html): one prompt, three models, real inference times.
 - [Archivo LA](https://isaacsight.com/projects/archivo.html): everyday Los Angeles objects catalogued like museum pieces, with the full AI production process.
 
