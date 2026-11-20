@@ -69,5 +69,7 @@
 - [Verde Soapery](https://isaacsight.com/projects/verde-soapery.html): Made for the occasion. A gifting campaign printed like wrapping paper — pressed flowers and eucalyptus in two-colour risograph, with the line cut across them on a green ribbon. An independent campaign concept by Isaac Hernandez with AI-assisted artwork.
 
 ## New spec campaigns (Nov 2026)
+- [CASA](https://isaacsight.com/projects/casa.html): a fictional Los Angeles design house shown in five continuous 10-second films with one palette, light and type system, with the full AI production process.
+- [Little Company](https://isaacsight.com/projects/little-company.html): hand-drawn ink creatures and a vinyl toy inside photoreal LA street scenes, four one-action films with the full process.
 - [Archivo LA](https://isaacsight.com/projects/archivo.html): everyday Los Angeles objects catalogued like museum pieces, with the full AI production process.
 
