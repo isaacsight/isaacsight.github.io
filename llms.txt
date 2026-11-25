@@ -27,6 +27,7 @@
 - [Shallows](https://isaacsight.com/projects/shallows.html): Shallows (浅瀬): a playable clay tide pool from Japan's Izu Peninsula. Five real shallow-water species with steering behaviors, collision, and a field guide. An interactive concept by Isaac Hernandez, built in three.js with fal-generated clay models.
 
 ## Spec campaigns
+- [Teenage Engineering EP/BC-1](https://isaacsight.com/projects/teenage-engineering-bc-1.html): Everyone's listening. A spec social loop for the Teenage Engineering EP/BC-1 CD player: the brand's own studio footage of the machine, with hand-drawn listeners lounging around it and a custom label printed on the spinning disc. An unsolicited concept by Isaac Hernandez with AI-assisted production.
 - [Graza](https://isaacsight.com/projects/graza.html): Sign your dinner. A spec campaign system for Graza olive oil: three vertical spots, a billboard and recipe cards, all built on one rule. An unsolicited concept by Isaac Hernandez with AI-assisted production.
 - [Fishwife](https://isaacsight.com/projects/fishwife.html): A postcard you can eat. A spec campaign for Fishwife: a 15-second collage animation, three collage posters and three in-context product photos. An unsolicited concept by Isaac Hernandez with AI-assisted production.
 - [Tracksmith](https://isaacsight.com/projects/tracksmith.html): Before the day has a name. A spec campaign for Tracksmith: a 30-second film and a six-frame photo story of one amateur runner's weekday morning in Boston. An unsolicited concept by Isaac Hernandez with AI-assisted production.
